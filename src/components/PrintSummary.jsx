@@ -1,4 +1,5 @@
 import { useSimulator } from '../context/SimulatorContext'
+import { causeLabel } from '../data/reversibleCauses'
 
 function fmt(ms, base) {
   const s = Math.floor((ms - base) / 1000)
@@ -13,8 +14,8 @@ export default function PrintSummary({ onClose }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/70" onClick={onClose} />
       <div
-        className="relative z-10 bg-white text-gray-900 rounded-lg p-6 shadow-2xl overflow-y-auto"
-        style={{ width: 680, maxHeight: '85vh' }}
+        className="relative z-10 bg-white text-gray-900 rounded-lg p-6 shadow-2xl overflow-y-auto w-full max-w-2xl mx-4"
+        style={{ maxHeight: '85vh' }}
       >
         <div className="flex items-center justify-between mb-4 border-b pb-3">
           <div>
@@ -43,6 +44,10 @@ export default function PrintSummary({ onClose }) {
             <p className="text-sm font-bold">{state.defib.shocksDelivered}</p>
           </div>
           <div>
+            <h2 className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1">CPR Cycles</h2>
+            <p className="text-sm font-bold">{state.cpr.cycleCount}</p>
+          </div>
+          <div className="col-span-2">
             <h2 className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1">Vitals at Close</h2>
             <p className="text-xs">
               HR {state.vitals.hr} · BP {state.vitals.sbp}/{state.vitals.dbp} ·
@@ -50,6 +55,15 @@ export default function PrintSummary({ onClose }) {
             </p>
           </div>
         </div>
+
+        {state.reversibleCauses?.length > 0 && (
+          <div className="mb-4">
+            <h2 className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2 border-b pb-1">
+              Reversible Causes (H’s &amp; T’s)
+            </h2>
+            <p className="text-sm">{state.reversibleCauses.map(causeLabel).join(' · ')}</p>
+          </div>
+        )}
 
         {state.rhythmHistory?.length > 0 && (
           <div className="mb-4">

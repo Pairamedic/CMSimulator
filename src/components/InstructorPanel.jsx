@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useSimulator } from '../context/SimulatorContext'
 import { RHYTHM_LIST } from '../data/rhythms'
 import { SCENARIOS } from '../data/scenarios'
+import { REVERSIBLE_CAUSES } from '../data/reversibleCauses'
 import { firebaseReady, fbSaveScenario, fbLoadScenarios, fbDeleteScenario } from '../firebase'
 
 const CATEGORY_COLORS = {
@@ -88,8 +89,8 @@ export default function InstructorPanel() {
 
       <div className="relative z-10 flex flex-col bg-surface border-r border-ecg-border" style={{ width: 380 }}>
         <div className="flex items-center justify-between p-3 border-b border-ecg-border bg-surface2 shrink-0">
-          <h2 className="text-sm font-bold text-white tracking-widest uppercase">Instructor Controls</h2>
-          <button onClick={close} className="text-ecg-gray hover:text-white text-xl leading-none">×</button>
+          <h2 className="text-sm font-bold text-ink tracking-widest uppercase">Instructor Controls</h2>
+          <button onClick={close} className="text-ecg-gray hover:text-ink text-xl leading-none">×</button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-3 space-y-5">
@@ -104,7 +105,7 @@ export default function InstructorPanel() {
                   onClick={() => { dispatch({ type: 'LOAD_SCENARIO', scenario: sc }); close() }}
                   className="text-left px-2 py-1.5 rounded border border-ecg-border bg-surface2 hover:border-ecg-amber transition-colors"
                 >
-                  <div className="text-[10px] font-bold text-white leading-tight">{sc.name}</div>
+                  <div className="text-[10px] font-bold text-ink leading-tight">{sc.name}</div>
                   <div className="text-[9px] text-ecg-gray leading-tight mt-0.5">{sc.description}</div>
                 </button>
               ))}
@@ -122,7 +123,7 @@ export default function InstructorPanel() {
                   onChange={e => setSaveName(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleSave()}
                   placeholder="Scenario name…"
-                  className="flex-1 bg-surface2 border border-ecg-border rounded px-2 py-1 text-[11px] text-white placeholder-ecg-gray focus:outline-none focus:border-ecg-green"
+                  className="flex-1 bg-surface2 border border-ecg-border rounded px-2 py-1 text-[11px] text-ink placeholder-ecg-gray focus:outline-none focus:border-ecg-green"
                 />
                 <button
                   onClick={handleSave}
@@ -140,7 +141,7 @@ export default function InstructorPanel() {
                   <p className="text-[9px] text-ecg-gray">No saved scenarios</p>
                 ) : cloudScenarios.map(sc => (
                   <div key={sc.id} className="flex items-center gap-1 px-2 py-1.5 border border-ecg-border rounded bg-surface2">
-                    <span className="flex-1 text-[10px] text-white truncate">{sc.name}</span>
+                    <span className="flex-1 text-[10px] text-ink truncate">{sc.name}</span>
                     <button
                       onClick={() => { dispatch({ type: 'LOAD_SCENARIO', scenario: sc }); close() }}
                       className="text-[9px] font-bold text-ecg-green border border-ecg-green/50 rounded px-1.5 py-0.5 hover:bg-ecg-green/10"
@@ -195,7 +196,7 @@ export default function InstructorPanel() {
                   onChange={e => dispatch({ type: 'SET_VITALS', vitals: { [f.key]: Number(e.target.value) } })}
                   className="flex-1"
                 />
-                <span className="text-[10px] text-white font-mono w-16 text-right shrink-0">
+                <span className="text-[10px] text-ink font-mono w-16 text-right shrink-0">
                   {state.vitals[f.key]}{f.unit}
                 </span>
               </div>
@@ -212,6 +213,37 @@ export default function InstructorPanel() {
             </div>
           </section>
 
+          {/* REVERSIBLE CAUSES (H's & T's) */}
+          <section>
+            <SectionLabel>Reversible Causes (H’s &amp; T’s)</SectionLabel>
+            <p className="text-[9px] text-ecg-gray mb-2">
+              Flag the cause(s) present in this scenario — shown in the debrief / saved session.
+            </p>
+            <div className="grid grid-cols-2 gap-0.5">
+              {REVERSIBLE_CAUSES.map(c => {
+                const on = state.reversibleCauses.includes(c.id)
+                return (
+                  <button
+                    key={c.id}
+                    onClick={() => dispatch({ type: 'TOGGLE_REVERSIBLE_CAUSE', id: c.id })}
+                    className={`flex items-center gap-1.5 text-left px-2 py-1.5 rounded border text-[10px] font-bold transition-colors ${
+                      on
+                        ? 'border-ecg-amber text-ecg-amber bg-surface2'
+                        : 'border-ecg-border text-ecg-gray bg-surface2 hover:border-ecg-gray'
+                    }`}
+                  >
+                    <span className={`inline-flex items-center justify-center w-3.5 h-3.5 rounded-sm border text-[8px] shrink-0 ${
+                      on ? 'border-ecg-amber bg-ecg-amber text-black' : 'border-ecg-gray'
+                    }`}>
+                      {on ? '✓' : ''}
+                    </span>
+                    {c.label}
+                  </button>
+                )
+              })}
+            </div>
+          </section>
+
           {/* CAPTURE THRESHOLD */}
           <section>
             <SectionLabel>Pacer Capture Threshold</SectionLabel>
@@ -222,7 +254,7 @@ export default function InstructorPanel() {
                 onChange={e => dispatch({ type: 'SET_CAPTURE_THRESHOLD', threshold: e.target.value })}
                 className="flex-1"
               />
-              <span className="text-sm text-white font-mono w-16 text-right">
+              <span className="text-sm text-ink font-mono w-16 text-right">
                 {state.pacer.captureThreshold} mA
               </span>
             </div>

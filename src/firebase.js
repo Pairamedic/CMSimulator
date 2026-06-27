@@ -43,3 +43,23 @@ export async function fbLoadScenarios() {
 export async function fbDeleteScenario(id) {
   await deleteDoc(doc(db(), 'acls_scenarios', id))
 }
+
+// ── Student simulation sessions ──
+export async function fbSaveSession(payload) {
+  const ref = await addDoc(collection(db(), 'acls_sessions'), {
+    ...payload,
+    savedAt: Date.now(),
+  })
+  return ref.id
+}
+
+export async function fbLoadSessions() {
+  const snap = await getDocs(
+    query(collection(db(), 'acls_sessions'), orderBy('savedAt', 'desc'))
+  )
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+}
+
+export async function fbDeleteSession(id) {
+  await deleteDoc(doc(db(), 'acls_sessions', id))
+}
