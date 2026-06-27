@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useSimulator } from '../context/SimulatorContext'
 import { useRoom } from '../context/RoomContext'
+import { useAuth } from '../context/AuthContext'
+import { signOut } from '../firebase'
 import MonitorScreen from './MonitorScreen'
 import DefibrillatorPanel from './DefibrillatorPanel'
 import PacerPanel from './PacerPanel'
@@ -32,6 +34,7 @@ function HeaderButton({ onClick, children, highlight }) {
 export default function ACLSSimulator({ remoteRoom, onExitMode }) {
   const { state, dispatch } = useSimulator()
   const { roomCode, role, connected } = useRoom()
+  const { user } = useAuth()
   const [showPrint, setShowPrint] = useState(false)
   const [showAlgos, setShowAlgos] = useState(false)
   const [showSessions, setShowSessions] = useState(false)
@@ -118,6 +121,16 @@ export default function ACLSSimulator({ remoteRoom, onExitMode }) {
           </span>
           <HeaderButton onClick={() => setShowPrint(true)}>Print</HeaderButton>
           <CodeClock />
+          {/* User avatar + sign out */}
+          {user && (
+            <button
+              onClick={() => signOut()}
+              title={`Signed in as ${user.email}\nTap to sign out`}
+              className="flex items-center justify-center w-8 h-8 rounded-full bg-ecg-green/20 border border-ecg-green/40 text-ecg-green text-[11px] font-bold uppercase hover:bg-ecg-red/20 hover:border-ecg-red/40 hover:text-ecg-red transition-colors"
+            >
+              {(user.displayName || user.email || '?')[0].toUpperCase()}
+            </button>
+          )}
         </div>
       </header>
 
