@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useSimulator } from '../context/SimulatorContext'
 import MonitorScreen from './MonitorScreen'
 import DefibrillatorPanel from './DefibrillatorPanel'
@@ -5,9 +6,11 @@ import PacerPanel from './PacerPanel'
 import MedLogPanel from './MedLogPanel'
 import CodeClock from './CodeClock'
 import InstructorPanel from './InstructorPanel'
+import PrintSummary from './PrintSummary'
 
 export default function ACLSSimulator() {
   const { state, dispatch } = useSimulator()
+  const [showPrint, setShowPrint] = useState(false)
 
   return (
     <div className="flex flex-col h-full bg-monitor-bg select-none overflow-hidden">
@@ -30,7 +33,15 @@ export default function ACLSSimulator() {
           </span>
         </div>
 
-        <CodeClock />
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowPrint(true)}
+            className="px-2 py-1 text-[10px] font-bold font-mono rounded border border-ecg-border text-ecg-gray hover:text-white hover:border-ecg-gray transition-colors uppercase tracking-widest"
+          >
+            PRINT
+          </button>
+          <CodeClock />
+        </div>
       </header>
 
       {/* ── MAIN BODY ── */}
@@ -50,8 +61,8 @@ export default function ACLSSimulator() {
 
       </div>
 
-      {/* ── INSTRUCTOR SLIDE-IN PANEL ── */}
       {state.instructorOpen && <InstructorPanel />}
+      {showPrint && <PrintSummary onClose={() => setShowPrint(false)} />}
 
     </div>
   )

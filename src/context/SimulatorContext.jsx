@@ -27,6 +27,7 @@ export const initialState = {
   },
 
   medications: [],
+  rhythmHistory: [],
   codeStartTime: null,
   instructorOpen: false,
   scenarioName: null,
@@ -35,7 +36,11 @@ export const initialState = {
 function reducer(state, action) {
   switch (action.type) {
     case 'SET_RHYTHM':
-      return { ...state, currentRhythm: action.rhythm }
+      return {
+        ...state,
+        currentRhythm: action.rhythm,
+        rhythmHistory: [...state.rhythmHistory, { rhythm: action.rhythm, time: Date.now() }],
+      }
 
     case 'SET_RUNNING':
       return { ...state, isRunning: action.value }
@@ -123,6 +128,7 @@ function reducer(state, action) {
         pacer: { ...initialState.pacer, captureThreshold: action.scenario.captureThreshold ?? 60 },
         medications: [],
         codeStartTime: null,
+        rhythmHistory: [{ rhythm: action.scenario.rhythm, time: Date.now() }],
       }
 
     default:
