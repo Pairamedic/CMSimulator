@@ -70,6 +70,11 @@ export function playPacingClick() {
   beep(1200, 0.03, 'square', 0.12)
 }
 
+// CPR metronome tick. accent=true marks the downbeat of a cycle.
+export function playMetronomeClick(accent = false) {
+  beep(accent ? 1500 : 1000, 0.035, 'square', accent ? 0.22 : 0.16)
+}
+
 export function resumeAudio() {
   try { getCtx().resume() } catch {}
 }

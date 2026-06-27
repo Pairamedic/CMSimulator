@@ -32,14 +32,14 @@ export default function MonitorScreen() {
         )}
         <div className="flex items-center gap-2">
           {!rhythm.pulse && (
-            <span className="text-xs font-bold text-ecg-red animate-pulse">NO PULSE</span>
+            <span className="text-xs font-bold text-ecg-red">NO PULSE</span>
           )}
           {rhythm.shockable && (
             <span className="text-xs font-bold text-ecg-red">SHOCKABLE</span>
           )}
           <button
             onClick={() => setShow12Lead(true)}
-            className="text-[10px] font-bold font-mono px-2 py-0.5 rounded border border-ecg-border text-ecg-gray hover:text-ecg-green hover:border-ecg-green transition-colors uppercase tracking-widest"
+            className="text-[10px] font-bold font-mono px-2.5 py-1 rounded border border-ecg-border text-ecg-gray hover:text-ecg-green hover:border-ecg-green transition-colors uppercase tracking-widest"
           >
             12-LEAD
           </button>

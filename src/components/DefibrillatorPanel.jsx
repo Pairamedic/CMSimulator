@@ -37,9 +37,9 @@ export default function DefibrillatorPanel() {
     dispatch({ type: 'DELIVER_SHOCK' })
 
     if (rhythm.shockable) {
-      // Brief VF artifact → asystole → NSR
-      dispatch({ type: 'SET_RHYTHM', rhythm: 'VFIB' })
-      setTimeout(() => dispatch({ type: 'SET_RHYTHM', rhythm: 'ASYSTOLE' }), 400)
+      // Brief VF artifact → asystole → NSR (silent: keep the debrief timeline on the shock)
+      dispatch({ type: 'SET_RHYTHM', rhythm: 'VFIB', silent: true })
+      setTimeout(() => dispatch({ type: 'SET_RHYTHM', rhythm: 'ASYSTOLE', silent: true }), 400)
       setTimeout(() => dispatch({ type: 'SET_RHYTHM', rhythm: 'NSR' }), 3200)
     } else if (defib.syncMode && ['SVT','AFIB','AFLUTTER','VTACH','WPW'].includes(currentRhythm)) {
       // Synchronized cardioversion

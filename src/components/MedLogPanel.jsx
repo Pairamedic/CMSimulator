@@ -6,7 +6,7 @@ const MEDS = [
   { drug: 'Amiodarone',   dose: '150 mg IV' },
   { drug: 'Adenosine',    dose: '6 mg IV' },
   { drug: 'Adenosine',    dose: '12 mg IV' },
-  { drug: 'Atropine',     dose: '0.5 mg IV' },
+  { drug: 'Atropine',     dose: '1 mg IV' },
   { drug: 'Lidocaine',    dose: '1 mg/kg IV' },
   { drug: 'Magnesium',    dose: '2g IV (Torsades)' },
   { drug: 'Sodium Bicarb',dose: '1 mEq/kg IV' },

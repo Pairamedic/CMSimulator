@@ -26,11 +26,25 @@ export const initialState = {
     captureThreshold: 60,
   },
 
+  cpr: {
+    active: false,
+    cycleStart: null,   // timestamp the current 2-min cycle began
+    cycleCount: 0,      // completed rhythm-check cycles
+  },
+  metronomeOn: true,
+
+  reversibleCauses: [], // array of cause ids the instructor has flagged
+
   medications: [],
   rhythmHistory: [],
+  eventLog: [],         // unified timeline: { type, label, detail, time }
   codeStartTime: null,
   instructorOpen: false,
   scenarioName: null,
+}
+
+function logEvent(state, entry) {
+  return [...state.eventLog, { time: Date.now(), ...entry }].slice(-200)
 }
 
 function reducer(state, action) {
@@ -40,6 +54,9 @@ function reducer(state, action) {
         ...state,
         currentRhythm: action.rhythm,
         rhythmHistory: [...state.rhythmHistory, { rhythm: action.rhythm, time: Date.now() }],
+        eventLog: action.silent
+          ? state.eventLog
+          : logEvent(state, { type: 'rhythm', label: 'Rhythm', detail: action.rhythm }),
       }
 
     case 'SET_RUNNING':
@@ -79,13 +96,22 @@ function reducer(state, action) {
       return {
         ...state,
         defib: { ...state.defib, charged: false, charging: false, shocksDelivered: state.defib.shocksDelivered + 1 },
+        eventLog: logEvent(state, {
+          type: 'shock',
+          label: `Shock #${state.defib.shocksDelivered + 1}`,
+          detail: `${state.defib.energy}J${state.defib.syncMode ? ' synchronized' : ''}`,
+        }),
       }
 
     case 'CLEAR_CHARGED':
       return { ...state, defib: { ...state.defib, charged: false, charging: false } }
 
     case 'TOGGLE_PACER':
-      return { ...state, pacer: { ...state.pacer, active: !state.pacer.active } }
+      return {
+        ...state,
+        pacer: { ...state.pacer, active: !state.pacer.active },
+        eventLog: logEvent(state, { type: 'pacer', label: 'Pacer', detail: state.pacer.active ? 'stopped' : `on @ ${state.pacer.rate} ppm / ${state.pacer.output} mA` }),
+      }
 
     case 'SET_PACER_RATE': {
       const rate = Math.max(30, Math.min(180, action.rate))
@@ -102,20 +128,82 @@ function reducer(state, action) {
       return { ...state, pacer: { ...state.pacer, captureThreshold } }
     }
 
+    // ── CPR ──────────────────────────────────────────────
+    case 'START_CPR':
+      return {
+        ...state,
+        cpr: { ...state.cpr, active: true, cycleStart: Date.now() },
+        codeStartTime: state.codeStartTime ?? Date.now(),
+        eventLog: logEvent(state, { type: 'cpr', label: 'CPR started' }),
+      }
+
+    case 'STOP_CPR':
+      return {
+        ...state,
+        cpr: { ...state.cpr, active: false },
+        eventLog: logEvent(state, { type: 'cpr', label: 'CPR paused' }),
+      }
+
+    case 'CPR_RHYTHM_CHECK': {
+      const cycleCount = state.cpr.cycleCount + 1
+      return {
+        ...state,
+        cpr: { ...state.cpr, cycleCount, cycleStart: Date.now() },
+        eventLog: logEvent(state, { type: 'check', label: 'Rhythm check', detail: `end of cycle ${cycleCount}` }),
+      }
+    }
+
+    case 'TOGGLE_METRONOME':
+      return { ...state, metronomeOn: !state.metronomeOn }
+
+    // ── Reversible causes (H's & T's) ────────────────────
+    case 'TOGGLE_REVERSIBLE_CAUSE': {
+      const has = state.reversibleCauses.includes(action.id)
+      return {
+        ...state,
+        reversibleCauses: has
+          ? state.reversibleCauses.filter(c => c !== action.id)
+          : [...state.reversibleCauses, action.id],
+      }
+    }
+
     case 'LOG_MED':
       return {
         ...state,
         medications: [{ drug: action.drug, dose: action.dose, time: Date.now() }, ...state.medications].slice(0, 60),
+        eventLog: logEvent(state, { type: 'med', label: action.drug, detail: action.dose }),
       }
 
     case 'CLEAR_MEDS':
       return { ...state, medications: [] }
 
     case 'START_CODE':
-      return { ...state, codeStartTime: Date.now() }
+      return {
+        ...state,
+        codeStartTime: Date.now(),
+        eventLog: logEvent(state, { type: 'code', label: 'Code started' }),
+      }
 
     case 'STOP_CODE':
-      return { ...state, codeStartTime: null }
+      return {
+        ...state,
+        codeStartTime: null,
+        cpr: { ...state.cpr, active: false },
+        eventLog: logEvent(state, { type: 'code', label: 'Code stopped' }),
+      }
+
+    case 'RESET_SESSION':
+      return {
+        ...state,
+        defib: { ...initialState.defib },
+        pacer: { ...initialState.pacer, captureThreshold: state.pacer.captureThreshold },
+        cpr: { ...initialState.cpr },
+        reversibleCauses: [],
+        medications: [],
+        rhythmHistory: [{ rhythm: state.currentRhythm, time: Date.now() }],
+        eventLog: [],
+        codeStartTime: null,
+      }
 
     case 'LOAD_SCENARIO':
       return {
@@ -126,9 +214,12 @@ function reducer(state, action) {
         scenarioName: action.scenario.name,
         defib: { ...initialState.defib },
         pacer: { ...initialState.pacer, captureThreshold: action.scenario.captureThreshold ?? 60 },
+        cpr: { ...initialState.cpr },
+        reversibleCauses: action.scenario.reversibleCauses ?? [],
         medications: [],
         codeStartTime: null,
         rhythmHistory: [{ rhythm: action.scenario.rhythm, time: Date.now() }],
+        eventLog: [{ time: Date.now(), type: 'scenario', label: 'Scenario loaded', detail: action.scenario.name }],
       }
 
     default:

@@ -4,16 +4,19 @@ export default {
   theme: {
     extend: {
       colors: {
-        'ecg-bg':      '#050810',
-        'monitor-bg':  '#0d0f12',
-        'surface':     '#141720',
-        'surface2':    '#1c2030',
-        'ecg-border':  '#252a3a',
-        'ecg-green':   '#00e5a0',
-        'ecg-amber':   '#f5a623',
-        'ecg-red':     '#e05252',
-        'ecg-blue':    '#4a9eff',
-        'ecg-gray':    '#8892aa',
+        // All themeable colors resolve to CSS variables (RGB channel triplets)
+        // so light/dark can flip globally and Tailwind opacity modifiers still work.
+        'monitor-bg': 'rgb(var(--bg) / <alpha-value>)',
+        'ecg-bg':     'rgb(var(--ecg-bg) / <alpha-value>)',
+        'surface':    'rgb(var(--surface) / <alpha-value>)',
+        'surface2':   'rgb(var(--surface2) / <alpha-value>)',
+        'ecg-border': 'rgb(var(--border) / <alpha-value>)',
+        'ink':        'rgb(var(--ink) / <alpha-value>)',
+        'ecg-gray':   'rgb(var(--gray) / <alpha-value>)',
+        'ecg-green':  'rgb(var(--green) / <alpha-value>)',
+        'ecg-amber':  'rgb(var(--amber) / <alpha-value>)',
+        'ecg-red':    'rgb(var(--red) / <alpha-value>)',
+        'ecg-blue':   'rgb(var(--blue) / <alpha-value>)',
       },
       fontFamily: {
         mono: ['Courier New', 'Courier', 'monospace'],

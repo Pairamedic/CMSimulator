@@ -20,13 +20,13 @@ export default function PacerPanel() {
       }`}>
         <div className="flex flex-col min-w-0">
           <span className="text-[9px] text-ecg-gray font-mono uppercase tracking-widest">{label}</span>
-          <span className={`text-xl font-bold font-mono leading-none ${highlight ? 'text-ecg-green' : 'text-white'}`}>
+          <span className={`text-xl font-bold font-mono leading-none ${highlight ? 'text-ecg-green' : 'text-ink'}`}>
             {value}<span className="text-[10px] text-ecg-gray ml-0.5">{unit}</span>
           </span>
         </div>
         <div className="flex flex-col gap-0.5">
-          <button onClick={onUp}   className="w-7 h-6 bg-surface2 border border-ecg-border rounded text-white font-bold text-sm hover:border-ecg-green hover:text-ecg-green active:scale-95">▲</button>
-          <button onClick={onDown} className="w-7 h-6 bg-surface2 border border-ecg-border rounded text-white font-bold text-sm hover:border-ecg-red hover:text-ecg-red active:scale-95">▼</button>
+          <button onClick={onUp}   className="w-7 h-6 bg-surface2 border border-ecg-border rounded text-ink font-bold text-sm hover:border-ecg-green hover:text-ecg-green active:scale-95">▲</button>
+          <button onClick={onDown} className="w-7 h-6 bg-surface2 border border-ecg-border rounded text-ink font-bold text-sm hover:border-ecg-red hover:text-ecg-red active:scale-95">▼</button>
         </div>
       </div>
     )
@@ -58,8 +58,8 @@ export default function PacerPanel() {
       {pacer.active && (
         <div className={`text-center text-xs font-bold tracking-widest py-1 rounded border ${
           captured
-            ? 'text-ecg-green border-ecg-green bg-green-900/30'
-            : 'text-ecg-red border-ecg-red bg-red-900/20 animate-pulse'
+            ? 'text-ecg-green border-ecg-green bg-ecg-green/10'
+            : 'text-ecg-red border-ecg-red bg-ecg-red/10'
         }`}>
           {captured ? '✔ CAPTURE' : 'NO CAPTURE'}
         </div>
