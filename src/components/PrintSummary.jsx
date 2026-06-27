@@ -49,6 +49,14 @@ export default function PrintSummary({ onClose }) {
             <h2 className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1">CPR Cycles</h2>
             <p className="text-sm font-bold">{state.cpr.cycleCount}</p>
           </div>
+          {state.rosc && (
+            <div className="col-span-2">
+              <h2 className="text-xs font-bold uppercase tracking-wide text-green-600 mb-1">ROSC</h2>
+              <p className="text-sm font-bold text-green-700">
+                Achieved at {state.roscTime && state.codeStartTime ? fmt(state.roscTime, state.codeStartTime) : '—'}
+              </p>
+            </div>
+          )}
           <div className="col-span-2">
             <h2 className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-1">Vitals at Close</h2>
             <p className="text-xs">
@@ -75,7 +83,7 @@ export default function PrintSummary({ onClose }) {
         {state.reversibleCauses?.length > 0 && (
           <div className="mb-4">
             <h2 className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2 border-b pb-1">
-              Reversible Causes (H’s &amp; T’s)
+              Reversible Causes (H's &amp; T's)
             </h2>
             <p className="text-sm">{state.reversibleCauses.map(causeLabel).join(' · ')}</p>
           </div>

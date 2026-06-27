@@ -24,6 +24,7 @@ function buildPayload(state, studentName, notes) {
     scenarioName: state.scenarioName || null,
     finalRhythm: state.currentRhythm,
     rosc: state.rosc,
+    roscTime: state.roscTime,
     shocks: state.defib.shocksDelivered,
     cprCycles: state.cpr.cycleCount,
     durationSec,
@@ -172,6 +173,7 @@ function SaveTab({ state, studentName, setStudentName, notes, setNotes, knownStu
           <Field label="Duration">{fmtClock(dur)}</Field>
           <Field label="Shocks">{state.defib.shocksDelivered}</Field>
           <Field label="CPR cycles">{state.cpr.cycleCount}</Field>
+          <Field label="ROSC">{state.rosc ? `Yes (${state.roscTime && start ? fmtClock((state.roscTime - start) / 1000) : '—'})` : 'No'}</Field>
           <Field label="Medications">{state.medications.length}</Field>
           <Field label="Causes flagged">
             {state.reversibleCauses.length ? state.reversibleCauses.map(causeLabel).join(', ') : '—'}
@@ -257,21 +259,34 @@ function SessionDetail({ s, onBack, onDelete }) {
       <div>
         <Field label="Scenario">{s.scenarioName || '—'}</Field>
         <Field label="Final rhythm">{s.finalRhythm}</Field>
-        <Field label="ROSC">{s.rosc ? 'Yes' : 'No'}</Field>
+        <Field label="ROSC">
+          {s.rosc
+            ? `Yes${s.roscTime && s.eventLog?.[0]?.time ? ` (${relTime(s.eventLog[0].time, s.roscTime)})` : ''}`
+            : 'No'}
+        </Field>
         <Field label="Duration">{fmtClock(s.durationSec || 0)}</Field>
         <Field label="Shocks">{s.shocks ?? 0}</Field>
         <Field label="CPR cycles">{s.cprCycles ?? 0}</Field>
-        {s.metrics && <>
-          <Field label="Time to CPR">{fmtSec(s.metrics.timeToCompression)}</Field>
-          <Field label="Time to 1st shock">{fmtSec(s.metrics.timeToShock)}</Field>
-          <Field label="Time to 1st epi">{fmtSec(s.metrics.timeToEpi)}</Field>
-          <Field label="CPR fraction">{s.metrics.cprFractionPct != null ? s.metrics.cprFractionPct + '%' : '—'}</Field>
-          <Field label="Interruptions">{s.metrics.interruptions ?? 0}</Field>
-        </>}
         <Field label="Causes">
           {s.reversibleCauses?.length ? s.reversibleCauses.map(causeLabel).join(', ') : '—'}
         </Field>
       </div>
+
+      {s.metrics && (
+        <div>
+          <div className="text-[10px] text-ecg-green font-mono uppercase tracking-widest mb-1">Quality Metrics</div>
+          <Field label="Time to CPR">{fmtSec(s.metrics.timeToCompression)}</Field>
+          <Field label="Time to 1st shock">{fmtSec(s.metrics.timeToShock)}</Field>
+          <Field label="Time to 1st epi">{fmtSec(s.metrics.timeToEpi)}</Field>
+          <Field label="CPR fraction">
+            <span className={s.metrics.cprFractionPct < 60 ? 'text-ecg-red' : 'text-ecg-green'}>
+              {s.metrics.cprFractionPct != null ? s.metrics.cprFractionPct + '%' : '—'}
+              {s.metrics.cprFractionPct != null && s.metrics.cprFractionPct < 60 ? ' (AHA ≥60%)' : ' ✓'}
+            </span>
+          </Field>
+          <Field label="Interruptions">{s.metrics.interruptions ?? 0}</Field>
+        </div>
+      )}
 
       {s.notes && (
         <div>
