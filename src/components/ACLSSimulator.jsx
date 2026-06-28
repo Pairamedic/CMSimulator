@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useSimulator } from '../context/SimulatorContext'
 import { useAuth } from '../context/AuthContext'
-import { signOut } from '../firebase'
+import { signOut, isAdmin } from '../firebase'
 import MonitorScreen from './MonitorScreen'
 import DefibrillatorPanel from './DefibrillatorPanel'
 import PacerPanel from './PacerPanel'
@@ -12,6 +12,7 @@ import InstructorPanel from './InstructorPanel'
 import PrintSummary from './PrintSummary'
 import AlgorithmModal from './AlgorithmModal'
 import SessionsModal from './SessionsModal'
+import AdminPanel from './AdminPanel'
 import ThemeToggle from './ThemeToggle'
 
 function HeaderButton({ onClick, children, highlight }) {
@@ -47,6 +48,7 @@ export default function ACLSSimulator() {
   const [showPrint, setShowPrint] = useState(false)
   const [showAlgos, setShowAlgos] = useState(false)
   const [showSessions, setShowSessions] = useState(false)
+  const [showAdmin, setShowAdmin] = useState(false)
 
   return (
     <div
@@ -75,6 +77,9 @@ export default function ACLSSimulator() {
           </button>
           <HeaderButton onClick={() => setShowAlgos(true)}>Algorithms</HeaderButton>
           <HeaderButton onClick={() => setShowSessions(true)}>Sessions</HeaderButton>
+          {isAdmin(user) && (
+            <HeaderButton onClick={() => setShowAdmin(true)} highlight>Add User</HeaderButton>
+          )}
         </div>
 
         {/* Center: wordmark + scenario label */}
@@ -137,6 +142,7 @@ export default function ACLSSimulator() {
       {showPrint    && <PrintSummary   onClose={() => setShowPrint(false)} />}
       {showAlgos    && <AlgorithmModal onClose={() => setShowAlgos(false)} />}
       {showSessions && <SessionsModal  onClose={() => setShowSessions(false)} />}
+      {showAdmin && isAdmin(user) && <AdminPanel onClose={() => setShowAdmin(false)} />}
     </div>
   )
 }

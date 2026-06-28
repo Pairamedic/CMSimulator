@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { signIn, signUp, firebaseReady } from '../firebase'
+import { signIn, firebaseReady } from '../firebase'
 
 // Animated ECG trace SVG — draws itself on mount via CSS animation
 function EcgLogo({ size = 160 }) {
@@ -26,32 +26,20 @@ function EcgLogo({ size = 160 }) {
 }
 
 export default function LoginPage() {
-  const [mode, setMode]         = useState('signin') // 'signin' | 'signup'
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
-  const [name, setName]         = useState('')
   const [err, setErr]           = useState('')
   const [busy, setBusy]         = useState(false)
 
   async function handleSubmit(e) {
     e.preventDefault()
     if (!email || !password) { setErr('Email and password are required.'); return }
-    if (mode === 'signup' && password.length < 6) { setErr('Password must be at least 6 characters.'); return }
     setBusy(true); setErr('')
     try {
-      if (mode === 'signin') {
-        await signIn(email, password)
-      } else {
-        await signUp(email, password, name.trim() || undefined)
-      }
+      await signIn(email, password)
     } catch (e) {
       setErr(friendlyError(e.code))
     } finally { setBusy(false) }
-  }
-
-  function toggle() {
-    setMode(m => m === 'signin' ? 'signup' : 'signin')
-    setErr('')
   }
 
   return (
@@ -82,7 +70,7 @@ export default function LoginPage() {
         {/* Card */}
         <div className="bg-surface border border-ecg-border rounded-2xl p-6 shadow-2xl">
           <h2 className="text-sm font-bold text-ink uppercase tracking-widest mb-5">
-            {mode === 'signin' ? 'Sign In' : 'Create Account'}
+            Sign In
           </h2>
 
           {!firebaseReady && (
@@ -92,18 +80,6 @@ export default function LoginPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-3">
-            {mode === 'signup' && (
-              <Field label="Your name (optional)">
-                <input
-                  type="text"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  placeholder="Dr. Smith"
-                  className={inputCls}
-                />
-              </Field>
-            )}
-
             <Field label="Email">
               <input
                 type="email"
@@ -121,8 +97,8 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                placeholder={mode === 'signup' ? 'Min 6 characters' : '••••••••'}
-                autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+                placeholder="••••••••"
+                autoComplete="current-password"
                 required
                 className={inputCls}
               />
@@ -137,19 +113,14 @@ export default function LoginPage() {
               disabled={busy || !firebaseReady}
               className="w-full mt-2 py-3 rounded-xl border-2 border-ecg-green text-ecg-green font-bold text-sm uppercase tracking-widest bg-surface2 hover:bg-ecg-green hover:text-black disabled:opacity-40 transition-all active:scale-95"
             >
-              {busy ? '…' : mode === 'signin' ? 'Sign In' : 'Create Account'}
+              {busy ? '…' : 'Sign In'}
             </button>
           </form>
 
           <div className="mt-5 pt-4 border-t border-ecg-border text-center">
-            <button
-              onClick={toggle}
-              className="text-[11px] text-ecg-gray hover:text-ink transition-colors"
-            >
-              {mode === 'signin'
-                ? "Don't have an account? Create one"
-                : 'Already have an account? Sign in'}
-            </button>
+            <p className="text-[11px] text-ecg-gray">
+              Need an account? Contact your administrator.
+            </p>
           </div>
         </div>
       </div>

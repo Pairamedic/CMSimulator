@@ -1,4 +1,4 @@
-import { initializeApp, getApps } from 'firebase/app'
+import { initializeApp, getApps, deleteApp } from 'firebase/app'
 import {
   getFirestore, collection, addDoc, getDocs,
   deleteDoc, doc, query, orderBy,
@@ -23,6 +23,13 @@ const cfg = {
 }
 
 export const firebaseReady = !!(cfg.apiKey && cfg.projectId)
+
+// Accounts in this list may create new user accounts from inside the app.
+export const ADMIN_EMAILS = ['eliasacaldwellnrp@gmail.com']
+
+export function isAdmin(user) {
+  return !!user && ADMIN_EMAILS.includes((user.email || '').toLowerCase())
+}
 
 function getApp() {
   return getApps().length ? getApps()[0] : initializeApp(cfg)
@@ -60,6 +67,23 @@ export async function signUp(email, password, displayName) {
 
 export async function signOut() {
   return fbSignOut(auth())
+}
+
+// Create a new user account without disturbing the current (admin) session.
+// createUserWithEmailAndPassword signs in as the new user, so we run it on a
+// throwaway secondary Firebase app and tear it down afterwards.
+export async function adminCreateAccount(email, password, displayName) {
+  if (!firebaseReady) throw new Error('Firebase not configured')
+  const secondaryApp = initializeApp(cfg, `admin-create-${Date.now()}`)
+  try {
+    const secondaryAuth = getAuth(secondaryApp)
+    const cred = await createUserWithEmailAndPassword(secondaryAuth, email, password)
+    if (displayName) await updateProfile(cred.user, { displayName })
+    await fbSignOut(secondaryAuth)
+    return cred
+  } finally {
+    await deleteApp(secondaryApp)
+  }
 }
 
 // ── Scenario storage ──────────────────────────────────────
