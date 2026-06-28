@@ -182,6 +182,10 @@
     .opt-group { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 6px; }
     .opt-btn { background: var(--input-bg); border: 1px solid var(--border); border-radius: 8px; color: var(--muted); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 500; padding: 7px 12px; line-height: 1.3; transition: background .15s, border-color .15s, color .15s; -webkit-tap-highlight-color: transparent; }
     .opt-btn.sel { background: rgba(94,234,212,.15); border-color: rgba(94,234,212,.4); color: var(--accent); }
+    @keyframes slideUp{from{opacity:0;transform:translate(-50%,18px)}to{opacity:1;transform:translate(-50%,0)}}
+    #update-toast{position:fixed;bottom:max(28px,env(safe-area-inset-bottom,28px));left:50%;transform:translateX(-50%);background:var(--card);border:1.5px solid rgba(94,234,212,.5);color:var(--text);padding:13px 20px;border-radius:14px;font-size:14px;font-weight:500;cursor:pointer;z-index:1000;box-shadow:0 6px 28px rgba(0,0,0,.55);white-space:nowrap;animation:slideUp .3s ease;display:flex;align-items:center;gap:10px;-webkit-tap-highlight-color:transparent}
+    #update-toast:hover{border-color:var(--accent);background:rgba(94,234,212,.06)}
+    #update-toast .ut-pill{background:rgba(94,234,212,.15);border:1px solid rgba(94,234,212,.35);color:var(--accent);font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;letter-spacing:.04em;text-transform:uppercase;flex:none}
   </style>
 </head>
 <body>
@@ -2253,6 +2257,36 @@ document.addEventListener('click', function(e) {
   prev.dispatchEvent(new Event('change'));
   prev.dispatchEvent(new Event('input'));
 });
+
+// ============================================================
+// UPDATE TOAST (service worker)
+// ============================================================
+(function(){
+  if(!('serviceWorker' in navigator))return;
+  function showUpdateToast(){
+    if(document.getElementById('update-toast'))return;
+    const t=document.createElement('div');
+    t.id='update-toast';
+    t.innerHTML='<span class="ut-pill">Update ready</span> Tap to get the latest version →';
+    t.addEventListener('click',()=>window.location.reload());
+    document.body.appendChild(t);
+  }
+  // Show toast when a new service worker takes control (autoUpdate fires skipWaiting)
+  const hadController=!!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(hadController)showUpdateToast();
+  });
+  // Also catch the case where a new SW is waiting when this page first loads
+  navigator.serviceWorker.ready.then(reg=>{
+    if(reg.waiting&&navigator.serviceWorker.controller)showUpdateToast();
+    reg.addEventListener('updatefound',()=>{
+      const w=reg.installing;if(!w)return;
+      w.addEventListener('statechange',()=>{
+        if(w.state==='installed'&&navigator.serviceWorker.controller)showUpdateToast();
+      });
+    });
+  });
+})();
 
 // ============================================================
 // SECURITY
