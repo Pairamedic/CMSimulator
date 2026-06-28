@@ -139,6 +139,7 @@ export function useECGCanvas(canvasRef, rhythmId, options = {}) {
       // Scroll: reset to identity so drawImage shifts by physical pixels, then restore scale
       ctx.save()
       ctx.setTransform(1, 0, 0, 1, 0, 0)
+      ctx.imageSmoothingEnabled = false
       ctx.drawImage(canvas, -Math.round(SPEED * dpr), 0)
       ctx.restore()
 

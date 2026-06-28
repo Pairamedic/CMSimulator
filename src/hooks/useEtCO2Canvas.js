@@ -36,6 +36,7 @@ export function useEtCO2Canvas(canvasRef, { isRunning, etco2 = 35, _canvasReady 
 
       ctx.save()
       ctx.setTransform(1, 0, 0, 1, 0, 0)
+      ctx.imageSmoothingEnabled = false
       ctx.drawImage(canvas, -Math.round(SPEED * dpr), 0)
       ctx.restore()
 
