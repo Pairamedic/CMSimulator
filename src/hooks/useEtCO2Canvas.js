@@ -2,11 +2,11 @@ import { useEffect, useRef } from 'react'
 
 const PPS = 80
 const SPEED = PPS / 60
-const CYCLE_PX = (PPS * 60) / 12  // 400 px/breath at 12 bpm
+const CYCLE_PX = (PPS * 60) / 12  // 400 CSS px/breath at 12 bpm
 
 function capnoY(cyclePos, etco2, H) {
   const t = cyclePos / CYCLE_PX
-  const base = H - 4
+  const base    = H - 4
   const plateau = H - 4 - (etco2 / 80) * (H - 8)
   if (t < 0.08) return base
   if (t < 0.22) return base - (base - plateau) * ((t - 0.08) / 0.14)
@@ -22,15 +22,22 @@ export function useEtCO2Canvas(canvasRef, { isRunning, etco2 = 35, _canvasReady 
     const canvas = canvasRef.current
     if (!canvas || !canvas.width || !canvas.height) return
 
+    const dpr = window.devicePixelRatio || 1
+    const W   = canvas.width  / dpr   // CSS px
+    const H   = canvas.height / dpr   // CSS px
+
     const ctx = canvas.getContext('2d')
-    const W = canvas.width
-    const H = canvas.height
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+
     let raf
 
     function frame() {
       if (isRunning !== false) offsetRef.current += SPEED
 
-      ctx.drawImage(canvas, -SPEED, 0)
+      ctx.save()
+      ctx.setTransform(1, 0, 0, 1, 0, 0)
+      ctx.drawImage(canvas, -Math.round(SPEED * dpr), 0)
+      ctx.restore()
 
       const clearX = W - Math.ceil(SPEED) - 2
       ctx.fillStyle = '#0a0c0f'
@@ -42,9 +49,9 @@ export function useEtCO2Canvas(canvasRef, { isRunning, etco2 = 35, _canvasReady 
 
       let first = true
       for (let px = clearX; px < W; px++) {
-        const t = offsetRef.current - (W - 1 - px)
+        const t  = offsetRef.current - (W - 1 - px)
         const cp = ((t % CYCLE_PX) + CYCLE_PX) % CYCLE_PX
-        const y = capnoY(cp, etco2, H)
+        const y  = capnoY(cp, etco2, H)
         if (first) { ctx.moveTo(px, y); first = false }
         else ctx.lineTo(px, y)
       }
