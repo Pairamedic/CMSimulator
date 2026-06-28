@@ -11,6 +11,9 @@ export const initialState = {
   vitalsHidden: false,
   labelHidden: true,
 
+  rosc: false,
+  roscTime: null,
+
   defib: {
     padsConnected: false,
     syncMode: false,
@@ -29,18 +32,16 @@ export const initialState = {
 
   cpr: {
     active: false,
-    cycleStart: null,   // timestamp the current 2-min cycle began
-    cycleCount: 0,      // completed rhythm-check cycles
+    cycleStart: null,
+    cycleCount: 0,
   },
   metronomeOn: true,
 
-  reversibleCauses: [], // array of cause ids the instructor has flagged
-
-  rosc: false,          // return of spontaneous circulation achieved
+  reversibleCauses: [],
 
   medications: [],
   rhythmHistory: [],
-  eventLog: [],         // unified timeline: { type, label, detail, time }
+  eventLog: [],
   codeStartTime: null,
   instructorOpen: false,
   scenarioName: null,
@@ -168,9 +169,9 @@ function reducer(state, action) {
       return {
         ...state,
         rosc: true,
+        roscTime: Date.now(),
         currentRhythm: perfusing,
         cpr: { ...state.cpr, active: false },
-        // restore a modest post-arrest perfusing state
         vitals: { ...state.vitals, hr: 88, sbp: 104, dbp: 62, spo2: 93, etco2: 38 },
         rhythmHistory: rhythmChanged
           ? [...state.rhythmHistory, { rhythm: perfusing, time: Date.now() }]
@@ -178,6 +179,9 @@ function reducer(state, action) {
         eventLog: logEvent(state, { type: 'rosc', label: 'ROSC achieved', detail: 'begin post-arrest care' }),
       }
     }
+
+    case 'CLEAR_ROSC':
+      return { ...state, rosc: false, roscTime: null }
 
     // ── Reversible causes (H's & T's) ────────────────────
     case 'TOGGLE_REVERSIBLE_CAUSE': {
@@ -215,6 +219,28 @@ function reducer(state, action) {
         eventLog: logEvent(state, { type: 'code', label: 'Code stopped' }),
       }
 
+    // Applied by student device when instructor pushes state over a room
+    case 'APPLY_INSTRUCTOR_STATE': {
+      const p = action.payload
+      const rhythmChanged = p.currentRhythm && p.currentRhythm !== state.currentRhythm
+      return {
+        ...state,
+        currentRhythm:    p.currentRhythm    ?? state.currentRhythm,
+        vitals:           p.vitals            ?? state.vitals,
+        vitalsHidden:     p.vitalsHidden      ?? state.vitalsHidden,
+        labelHidden:      p.labelHidden       ?? state.labelHidden,
+        isRunning:        p.isRunning         ?? state.isRunning,
+        scenarioName:     p.scenarioName      ?? state.scenarioName,
+        reversibleCauses: p.reversibleCauses  ?? state.reversibleCauses,
+        pacer: { ...state.pacer, captureThreshold: p.captureThreshold ?? state.pacer.captureThreshold },
+        rosc:    p.rosc    ?? state.rosc,
+        roscTime: p.roscTime ?? state.roscTime,
+        rhythmHistory: rhythmChanged
+          ? [...state.rhythmHistory, { rhythm: p.currentRhythm, time: Date.now() }]
+          : state.rhythmHistory,
+      }
+    }
+
     case 'RESET_SESSION':
       return {
         ...state,
@@ -223,6 +249,7 @@ function reducer(state, action) {
         cpr: { ...initialState.cpr },
         reversibleCauses: [],
         rosc: false,
+        roscTime: null,
         medications: [],
         rhythmHistory: [{ rhythm: state.currentRhythm, time: Date.now() }],
         eventLog: [],
@@ -241,6 +268,7 @@ function reducer(state, action) {
         cpr: { ...initialState.cpr },
         reversibleCauses: action.scenario.reversibleCauses ?? [],
         rosc: false,
+        roscTime: null,
         medications: [],
         codeStartTime: null,
         rhythmHistory: [{ rhythm: action.scenario.rhythm, time: Date.now() }],

@@ -37,7 +37,7 @@ export default function ECGWaveform() {
     pacerOutput:      state.pacer.output,
     captureThreshold: state.pacer.captureThreshold,
     isRunning:        state.isRunning,
-    // canvasReady included so hook restarts when canvas is resized
+    syncMode:         state.defib.syncMode,
     _canvasReady:     canvasReady,
   })
 

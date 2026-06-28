@@ -9,15 +9,13 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg'],
       manifest: {
-        name: 'ACLS Rhythm Simulator',
-        short_name: 'RhythmGen',
-        description: 'AHA-compliant ACLS rhythm simulator for AEMT instructors',
+        name: 'Class Manager Pro',
+        short_name: 'CM Pro',
+        description: 'ACLS Instructor Platform — rhythm simulator, debrief metrics, student sessions',
         theme_color: '#0d0f12',
         background_color: '#0d0f12',
         display: 'standalone',
         orientation: 'landscape',
-        scope: '/rhythmgen/',
-        start_url: '/rhythmgen/',
         icons: [
           { src: 'icon.svg', type: 'image/svg+xml', sizes: 'any', purpose: 'any maskable' },
         ],
@@ -30,5 +28,4 @@ export default defineConfig({
       },
     }),
   ],
-  base: '/rhythmgen/',
 })

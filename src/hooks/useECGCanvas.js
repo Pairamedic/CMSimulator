@@ -35,10 +35,11 @@ export function useECGCanvas(canvasRef, rhythmId, options = {}) {
     pacerOutput       = 0,
     captureThreshold  = 60,
     isRunning         = true,
+    syncMode          = false,
     _canvasReady,     // toggled by ECGWaveform to restart hook when canvas resizes
   } = options
 
-  const stateRef = useRef({ offset: 0, beatNum: 0, beatStart: 0, beatLen: beatLenPx(75), prevY: null })
+  const stateRef = useRef({ offset: 0, beatNum: 0, beatStart: 0, beatLen: beatLenPx(75), prevY: null, prevRawY: null })
   const rafRef   = useRef(null)
 
   useEffect(() => {
@@ -64,9 +65,13 @@ export function useECGCanvas(canvasRef, rhythmId, options = {}) {
     s.beatNum   = 0
     s.beatStart = 0
     s.prevY     = null
+    s.prevRawY  = null
     s.beatLen   = (rhythm.type === 'chaos' || rhythm.type === 'dual')
       ? PIXELS_PER_SEC
       : beatLenPx(rhythm.rate)
+
+    // Sync marker positions — each { x, y } scrolls left with the trace
+    const syncMarkers = []
 
     // Background
     const ctx = canvas.getContext('2d')
@@ -137,6 +142,10 @@ export function useECGCanvas(canvasRef, rhythmId, options = {}) {
       // Scroll left
       ctx.drawImage(canvas, -SPEED, 0)
 
+      // Shift sync markers with the scroll, remove ones that left the canvas
+      for (const m of syncMarkers) m.x -= SPEED
+      while (syncMarkers.length && syncMarkers[0].x < -20) syncMarkers.shift()
+
       // Erase right strip
       ctx.fillStyle = '#050810'
       ctx.fillRect(W - SPEED - 2, 0, SPEED + 2, H)
@@ -153,7 +162,7 @@ export function useECGCanvas(canvasRef, rhythmId, options = {}) {
       }
 
       // Draw trace
-      const y      = getY(t)
+      const y       = getY(t)
       const canvasY = MID - y * SCALE
 
       if (s.prevY !== null) {
@@ -168,6 +177,42 @@ export function useECGCanvas(canvasRef, rhythmId, options = {}) {
         ctx.shadowBlur = 0
       }
 
+      // ── Sync mode: detect R-wave peaks and draw markers ──
+      if (syncMode) {
+        // Look-ahead one frame to confirm we're at the peak (not still rising)
+        const nextY = getY(t + SPEED)
+        const prevRaw = s.prevRawY ?? 0
+        // Peak: above threshold, higher than prev sample, at or above next sample
+        if (y > 0.45 && y > prevRaw && y >= nextY) {
+          syncMarkers.push({ x: W - 1, y: canvasY })
+        }
+        s.prevRawY = y
+
+        // Draw all visible sync markers: downward-pointing triangle above each R peak
+        ctx.save()
+        ctx.fillStyle   = '#ffffff'
+        ctx.strokeStyle = '#ffffff'
+        ctx.lineWidth   = 1
+        const hw = 5, th = 9  // half-width, triangle height
+        for (const m of syncMarkers) {
+          if (m.x < 0 || m.x > W) continue
+          const tipY = m.y - 5   // tip points down toward the R peak
+          ctx.beginPath()
+          ctx.moveTo(m.x - hw, tipY - th)  // top-left
+          ctx.lineTo(m.x + hw, tipY - th)  // top-right
+          ctx.lineTo(m.x,      tipY)        // bottom tip
+          ctx.closePath()
+          ctx.fill()
+        }
+
+        // "SYNC" label in top-left of canvas
+        ctx.fillStyle = '#ffffff'
+        ctx.font = 'bold 11px monospace'
+        ctx.textAlign = 'left'
+        ctx.fillText('SYNC', 8, 16)
+        ctx.restore()
+      }
+
       s.prevY   = canvasY
       s.offset += SPEED
 
@@ -179,5 +224,5 @@ export function useECGCanvas(canvasRef, rhythmId, options = {}) {
 
   // _canvasReady in deps so hook restarts when canvas is resized
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rhythmId, pacerActive, pacerRate, pacerOutput, captureThreshold, isRunning, _canvasReady])
+  }, [rhythmId, pacerActive, pacerRate, pacerOutput, captureThreshold, isRunning, syncMode, _canvasReady])
 }
