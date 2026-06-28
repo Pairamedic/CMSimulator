@@ -237,7 +237,7 @@
     <div class="hdr-top">
       <div class="hdr-title">🎓 Class Manager <span>Paramedic Instructor Portal</span></div>
       <div class="hdr-actions">
-        <a href="dashboard.html" class="icon-btn" style="text-decoration:none" title="Home">🏠</a>
+        <a href="classmanager.html" class="icon-btn" style="text-decoration:none" title="Home">🏠</a>
         <button class="icon-btn" id="theme-btn" title="Toggle theme">☀</button>
         <button class="icon-btn" id="signout-btn" title="Sign out">⎋</button>
       </div>
@@ -247,6 +247,7 @@
       <button class="tab" data-view="classes">📅 Classes</button>
       <button class="tab" data-view="certs">🏅 Certs</button>
       <button class="tab" data-view="materials">📚 Materials</button>
+      <button class="tab" data-view="simulator">🫀 Simulator</button>
     </nav>
   </div>
 </header>
@@ -278,6 +279,17 @@
           <div class="sec-hd"><div class="sec-title">Expiring Soon</div></div>
           <div id="dash-expiring"></div>
         </div>
+      </div>
+      <div style="margin-top:16px">
+        <div class="sec-hd"><div class="sec-title">Tools</div></div>
+        <a href="index.html" class="card-sm" style="display:flex;align-items:center;gap:14px;text-decoration:none;cursor:pointer">
+          <div style="font-size:32px;flex:none">🫀</div>
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--text)">Cardiac Monitor Simulator</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:3px">ACLS rhythm simulator · defibrillator · pacer · remote student control</div>
+          </div>
+          <div style="margin-left:auto;font-size:18px;color:var(--muted);flex:none">→</div>
+        </a>
       </div>
     </div>
 
@@ -468,6 +480,28 @@
     <div id="materials-list"></div>
   </section>
 
+  <!-- SIMULATOR -->
+  <section class="view" id="view-simulator">
+    <div class="sec-hd">
+      <div class="sec-title">Cardiac Monitor Simulator</div>
+    </div>
+    <div class="card-sm" style="text-align:center;padding:32px 20px">
+      <div style="font-size:48px;margin-bottom:12px">🫀</div>
+      <div style="font-size:18px;font-weight:700;margin-bottom:8px">ACLS Cardiac Monitor Simulator</div>
+      <div style="font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.6">
+        Full ACLS rhythm simulator with defibrillator, transcutaneous pacer, real-time debrief metrics, and remote phone control for students.
+      </div>
+      <a href="index.html" class="btn primary" style="display:inline-block;font-size:15px;padding:14px 32px;text-decoration:none">
+        Launch Monitor Simulator →
+      </a>
+      <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--border)">
+        <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--muted)">Student Remote Access</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.55">
+          Students can join as a remote controller by opening the simulator on their device and entering the room code shown on the monitor.
+        </div>
+      </div>
+    </div>
+  </section>
 
 </main>
 
