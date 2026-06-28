@@ -1037,11 +1037,12 @@ firebase.initializeApp({
 });
 const fbAuth    = firebase.auth();
 const db        = firebase.firestore();
-const fbStorage = firebase.storage();
+let fbStorage = null;
+try { fbStorage = firebase.storage(); } catch(e) { console.warn('Firebase Storage unavailable:', e.message); }
 
 let UID = null;
 const col     = name => db.collection(`users/${UID}/${name}`);
-const stgRef  = path => fbStorage.ref(path);
+const stgRef  = path => fbStorage ? fbStorage.ref(path) : null;
 
 // ============================================================
 // STATE
@@ -1278,31 +1279,37 @@ fbAuth.onAuthStateChanged(user=>{
 });
 
 function setupListeners(){
+  // Fallback: force-hide loading screen after 8s in case Firestore is slow
+  setTimeout(() => {
+    $('loading-screen').classList.add('hidden');
+  }, 8000);
+
+  const errAndShow = e => { console.error(e); $('loading-screen').classList.add('hidden'); };
   unsubs.push(col('classes').orderBy('date','asc').onSnapshot(snap=>{
     allClasses=snap.docs.map(d=>({id:d.id,...d.data()}));
     refreshView();
-  },console.error));
+  },errAndShow));
   unsubs.push(col('students').orderBy('lastName','asc').onSnapshot(snap=>{
     allStudents=snap.docs.map(d=>({id:d.id,...d.data()}));
     refreshView();
-  },console.error));
+  },errAndShow));
   unsubs.push(col('roster').onSnapshot(snap=>{
     allRoster=snap.docs.map(d=>({id:d.id,...d.data()}));
     refreshView();
-  },console.error));
+  },errAndShow));
   unsubs.push(col('certs').onSnapshot(snap=>{
     allCerts=snap.docs.map(d=>({id:d.id,...d.data()}));
     refreshView();
-  },console.error));
+  },errAndShow));
   unsubs.push(col('expenses').orderBy('date','desc').onSnapshot(snap=>{
     allExpenses=snap.docs.map(d=>({id:d.id,...d.data()}));
     refreshView();
-  },console.error));
+  },errAndShow));
   unsubs.push(col('materials').orderBy('uploadedAt','desc').onSnapshot(snap=>{
     allMaterials=snap.docs.map(d=>({id:d.id,...d.data()}));
     if(currentView==='materials')renderMaterials();
     $('loading-screen').classList.add('hidden');
-  },console.error));
+  },errAndShow));
   col('settings').doc('info').onSnapshot(snap=>{
     infoDoc=snap.exists?snap.data():{};
     if($('subpanel-dash-info').style.display!=='none')renderInfo();
@@ -2073,6 +2080,10 @@ window.openStudentRecords = async function(studentId) {
 
 async function loadStudentFiles(studentId) {
   $('sr-files-list').innerHTML = '<div class="empty" style="padding:20px 0"><div class="spin"></div></div>';
+  if (!fbStorage) {
+    $('sr-files-list').innerHTML = '<div class="empty" style="padding:20px 0"><div class="empty-text">Storage not available — enable Firebase Storage in the console.</div></div>';
+    return;
+  }
   try {
     const ref = stgRef(`records/${UID}/${studentId}`);
     const result = await ref.listAll();
@@ -2104,6 +2115,7 @@ async function loadStudentFiles(studentId) {
 }
 
 window.deleteRecordFile = async function(studentId, fileName) {
+  if (!fbStorage) { alert('Storage not available.'); return; }
   if (!confirm(`Delete "${fileName}"?`)) return;
   try {
     await stgRef(`records/${UID}/${studentId}/${fileName}`).delete();
@@ -2114,6 +2126,7 @@ window.deleteRecordFile = async function(studentId, fileName) {
 $('sr-file-input').addEventListener('change', async function() {
   const files = Array.from(this.files);
   if (!files.length || !currentRecordStudentId) return;
+  if (!fbStorage) { alert('Storage not available — enable Firebase Storage in the console.'); return; }
   $('sr-upload-err').textContent = '';
   for (const file of files) {
     $('sr-prog-name').textContent = file.name;
@@ -2160,6 +2173,7 @@ $('sr-file-input').addEventListener('change', async function() {
 
 // Export all records for a year as a list of download links in a new tab
 $('rec-export-year-btn').addEventListener('click', async function() {
+  if (!fbStorage) { alert('Storage not available — enable Firebase Storage in the console.'); return; }
   const year = $('rec-year-filter').value;
   this.textContent = 'Loading…'; this.disabled = true;
   try {
