@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { signOut } from '../firebase'
 import { saveSession } from '../utils/sessionStore'
 import { computeMetrics } from '../utils/metrics'
+import { clearLiveState } from '../utils/livePersist'
 import MonitorScreen from './MonitorScreen'
 import DefibrillatorPanel from './DefibrillatorPanel'
 import PacerPanel from './PacerPanel'
@@ -14,17 +15,14 @@ import InstructorPanel from './InstructorPanel'
 import PrintSummary from './PrintSummary'
 import AlgorithmModal from './AlgorithmModal'
 import SessionsModal from './SessionsModal'
+import GradebookModal from './GradebookModal'
 import ThemeToggle from './ThemeToggle'
 
-function HeaderButton({ onClick, children, highlight }) {
+function HeaderButton({ onClick, children }) {
   return (
     <button
       onClick={onClick}
-      className={`px-2.5 min-h-[40px] text-[11px] font-bold font-mono rounded-lg border active:scale-95 transition-all uppercase tracking-widest ${
-        highlight
-          ? 'border-ecg-amber text-ecg-amber bg-ecg-amber/10 hover:bg-ecg-amber/20'
-          : 'border-ecg-border text-ecg-gray bg-surface2 hover:text-ink hover:border-ecg-gray'
-      }`}
+      className="px-2.5 min-h-[40px] text-[11px] font-bold font-mono rounded-lg border active:scale-95 transition-all uppercase tracking-widest border-ecg-border text-ecg-gray bg-surface2 hover:text-ink hover:border-ecg-gray"
     >
       {children}
     </button>
@@ -49,7 +47,8 @@ export default function ACLSSimulator() {
   const [showPrint, setShowPrint] = useState(false)
   const [showAlgos, setShowAlgos] = useState(false)
   const [showSessions, setShowSessions] = useState(false)
-  const [showEndSession, setShowEndSession] = useState(false)
+  const [showGradebook, setShowGradebook] = useState(false)
+  const [showPowerOff, setShowPowerOff] = useState(false)
 
   return (
     <div
@@ -69,18 +68,21 @@ export default function ACLSSimulator() {
               ← CM
             </button>
           )}
-          <button
-            onClick={() => dispatch({ type: 'TOGGLE_INSTRUCTOR' })}
-            className="flex items-center gap-2 px-3 min-h-[40px] rounded-lg bg-surface2 border border-ecg-border text-ecg-gray hover:text-ink hover:border-ecg-green active:scale-95 transition-all text-xs font-bold uppercase tracking-widest"
-          >
-            <span className="text-ecg-green">☰</span> Instructor
-          </button>
+          {state.powered && (
+            <button
+              onClick={() => dispatch({ type: 'TOGGLE_INSTRUCTOR' })}
+              className="flex items-center gap-2 px-3 min-h-[40px] rounded-lg bg-surface2 border border-ecg-border text-ecg-gray hover:text-ink hover:border-ecg-green active:scale-95 transition-all text-xs font-bold uppercase tracking-widest"
+            >
+              <span className="text-ecg-green">☰</span> Instructor
+            </button>
+          )}
           <HeaderButton onClick={() => setShowAlgos(true)}>Algorithms</HeaderButton>
           <HeaderButton onClick={() => setShowSessions(true)}>Sessions</HeaderButton>
+          <HeaderButton onClick={() => setShowGradebook(true)}>Gradebook</HeaderButton>
         </div>
 
         <div className="flex items-center gap-2 min-w-0 order-1 sm:order-2">
-          <EkgMark />
+          <EkgMark dim={!state.powered} />
           <span className="text-sm font-bold text-ink tracking-wide whitespace-nowrap">
             CM <span className="text-ecg-green">Simulator</span>
           </span>
@@ -100,14 +102,20 @@ export default function ACLSSimulator() {
           )}
           <HeaderButton onClick={() => setShowPrint(true)}>Print</HeaderButton>
           {state.powered && <CodeClock />}
-          {state.powered && (
-            <button
-              onClick={() => setShowEndSession(true)}
-              className="px-2.5 min-h-[40px] text-[11px] font-bold font-mono rounded-lg border active:scale-95 transition-all uppercase tracking-widest border-ecg-red/70 text-ecg-red bg-ecg-red/10 hover:bg-ecg-red/20"
-            >
-              End Session
-            </button>
-          )}
+
+          {/* Power button — green when on, click to power off */}
+          <button
+            onClick={() => state.powered ? setShowPowerOff(true) : null}
+            title={state.powered ? 'Power Off' : 'Power Off (turn on from main screen)'}
+            className={`flex items-center justify-center w-9 h-9 rounded-full border-2 font-bold text-base transition-all active:scale-95 ${
+              state.powered
+                ? 'border-ecg-green bg-ecg-green/20 text-ecg-green hover:border-ecg-red hover:bg-ecg-red/20 hover:text-ecg-red cursor-pointer'
+                : 'border-ecg-border bg-surface2 text-ecg-gray cursor-default opacity-40'
+            }`}
+          >
+            ⏻
+          </button>
+
           {user && (
             <button
               onClick={() => signOut()}
@@ -152,21 +160,16 @@ export default function ACLSSimulator() {
       )}
 
       {/* ── MODALS & OVERLAYS ── */}
-      {state.instructorOpen && (
-        <InstructorPanel
-          onEndSession={() => {
-            dispatch({ type: 'TOGGLE_INSTRUCTOR' })
-            setShowEndSession(true)
-          }}
-        />
-      )}
-      {showPrint      && <PrintSummary   onClose={() => setShowPrint(false)} />}
-      {showAlgos      && <AlgorithmModal onClose={() => setShowAlgos(false)} />}
-      {showSessions   && <SessionsModal  onClose={() => setShowSessions(false)} />}
-      {showEndSession && (
-        <EndSessionDialog
+      {state.instructorOpen && <InstructorPanel />}
+      {showPrint     && <PrintSummary    onClose={() => setShowPrint(false)} />}
+      {showAlgos     && <AlgorithmModal  onClose={() => setShowAlgos(false)} />}
+      {showSessions  && <SessionsModal   onClose={() => setShowSessions(false)} />}
+      {showGradebook && <GradebookModal  onClose={() => setShowGradebook(false)} />}
+      {showPowerOff && (
+        <PowerOffDialog
           state={state}
-          onClose={() => setShowEndSession(false)}
+          dispatch={dispatch}
+          onClose={() => setShowPowerOff(false)}
         />
       )}
 
@@ -180,65 +183,127 @@ export default function ACLSSimulator() {
   )
 }
 
-// ── Power-off screen ──────────────────────────────────────────────────────────
+// ── Power-on screen (name entry) ──────────────────────────────────────────────
 
 function PowerOnScreen() {
   const { dispatch } = useSimulator()
+  const [members, setMembers] = useState(['', ''])
+
+  function updateMember(i, val) {
+    setMembers(prev => prev.map((n, j) => j === i ? val : n))
+  }
+
+  function handlePowerOn() {
+    const filtered = members.filter(n => n.trim())
+    dispatch({ type: 'POWER_ON', teamMembers: filtered })
+  }
+
+  const canStart = members.some(n => n.trim())
+
   return (
-    <div className="flex flex-1 flex-col items-center justify-center bg-monitor-bg select-none gap-10">
-      <div className="flex flex-col items-center gap-3 opacity-20">
-        <svg width="64" height="36" viewBox="0 0 96 54" fill="none">
+    <div className="flex flex-1 flex-col items-center justify-center bg-monitor-bg gap-8 p-6">
+
+      {/* Branding */}
+      <div className="flex flex-col items-center gap-3 opacity-30">
+        <svg width="72" height="40" viewBox="0 0 96 54" fill="none">
           <polyline
             points="0,27 20,27 24,21 30,27 38,27 44,37 52,6 60,48 68,27 96,27"
             stroke="rgb(25 192 138)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"
           />
         </svg>
-        <div className="text-[13px] font-bold text-ecg-gray tracking-[0.3em] font-mono uppercase">CM Simulator</div>
+        <div className="text-[14px] font-bold text-ecg-gray tracking-[0.3em] font-mono uppercase">CM Simulator</div>
         <div className="text-[10px] text-ecg-gray tracking-[0.25em] font-mono uppercase">ACLS Training Monitor</div>
       </div>
 
+      {/* Name entry card */}
+      <div className="w-full max-w-sm bg-surface border border-ecg-border rounded-2xl shadow-2xl p-6 space-y-4">
+        <div>
+          <h2 className="text-sm font-bold text-ink tracking-widest uppercase">Who is participating?</h2>
+          <p className="text-[11px] text-ecg-gray mt-1">Enter team member names before powering on. These are saved with the session.</p>
+        </div>
+
+        <div className="space-y-2">
+          {members.map((name, i) => (
+            <div key={i} className="flex gap-1.5 items-center">
+              <input
+                value={name}
+                onChange={e => updateMember(i, e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && i === members.length - 1 && members.length < 6)
+                    setMembers(prev => [...prev, ''])
+                  else if (e.key === 'Enter' && canStart)
+                    handlePowerOn()
+                }}
+                placeholder={i === 0 ? 'Student / team member 1…' : `Team member ${i + 1}…`}
+                autoFocus={i === 0}
+                className="flex-1 bg-surface2 border border-ecg-border rounded-lg px-3 min-h-[44px] text-sm text-ink placeholder-ecg-gray focus:outline-none focus:border-ecg-green"
+              />
+              {i >= 2 && (
+                <button
+                  onClick={() => setMembers(prev => prev.filter((_, j) => j !== i))}
+                  className="text-ecg-gray hover:text-ecg-red text-xl leading-none px-1.5 min-h-[44px]"
+                >×</button>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {members.length < 6 && (
+          <button
+            onClick={() => setMembers(prev => [...prev, ''])}
+            className="text-[11px] font-bold text-ecg-green/60 hover:text-ecg-green transition-colors"
+          >
+            + Add Member
+          </button>
+        )}
+
+        <button
+          onClick={handlePowerOn}
+          disabled={!canStart}
+          className="w-full min-h-[52px] rounded-xl font-bold text-sm uppercase tracking-widest border-2 flex items-center justify-center gap-2.5 transition-all active:scale-95 border-ecg-green text-ecg-green bg-surface2 hover:bg-ecg-green hover:text-black disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          <span className="text-lg">⏻</span> Power On
+        </button>
+
+        <p className="text-[10px] text-ecg-gray text-center">
+          You can also skip names and power on to start immediately.
+        </p>
+      </div>
+
       <button
-        onClick={() => dispatch({ type: 'POWER_ON' })}
-        className="flex items-center gap-2.5 px-10 py-3.5 rounded-full border-2 border-ecg-green/50 text-ecg-green/70 font-bold text-sm uppercase tracking-widest hover:border-ecg-green hover:text-ecg-green hover:bg-ecg-green/10 active:scale-95 transition-all"
+        onClick={() => dispatch({ type: 'POWER_ON', teamMembers: [] })}
+        className="text-[11px] text-ecg-gray/50 hover:text-ecg-gray underline transition-colors"
       >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-          <path d="M12 2v6M4.93 4.93l4.24 4.24M2 12h6M4.93 19.07l4.24-4.24M12 22v-6M19.07 19.07l-4.24-4.24M22 12h-6M19.07 4.93l-4.24 4.24"/>
-        </svg>
-        Power On
+        Skip — power on without names
       </button>
     </div>
   )
 }
 
-// ── End Session dialog ────────────────────────────────────────────────────────
+// ── Power-off confirmation dialog ─────────────────────────────────────────────
 
 function fmt(sec) {
   const s = Math.max(0, Math.floor(sec || 0))
   return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
 }
 
-function EndSessionDialog({ state, onClose }) {
-  const [teamMembers, setTeamMembers] = useState([''])
+function PowerOffDialog({ state, dispatch, onClose }) {
   const [notes, setNotes] = useState('')
-  const [status, setStatus] = useState('')
   const [busy, setBusy] = useState(false)
-  const [saved, setSaved] = useState(false)
+  const [status, setStatus] = useState('')
+  const [done, setDone] = useState(false)
 
   const start = state.codeStartTime ?? state.eventLog?.[0]?.time
   const dur = start ? Math.round((Date.now() - start) / 1000) : 0
+  const members = state.teamMembers?.length ? state.teamMembers : []
 
-  function updateMember(i, val) {
-    setTeamMembers(prev => prev.map((n, j) => j === i ? val : n))
-  }
-
-  async function handleSave() {
-    if (!teamMembers[0]?.trim()) { setStatus('Enter at least one student name.'); return }
-    setBusy(true); setStatus('')
+  async function handleSaveAndOff() {
+    setBusy(true)
+    setStatus('')
     try {
-      const filtered = teamMembers.filter(n => n.trim())
       await saveSession({
-        studentName: filtered[0] || '',
-        teamMembers: filtered,
+        studentName: members[0] || '',
+        teamMembers: members,
         notes: notes.trim(),
         scenarioName: state.scenarioName || null,
         finalRhythm: state.currentRhythm,
@@ -254,40 +319,41 @@ function EndSessionDialog({ state, onClose }) {
         reversibleCauses: [...state.reversibleCauses],
         eventLog: [...state.eventLog],
       })
-      setSaved(true)
+      clearLiveState()
+      setDone(true)
+      setTimeout(() => dispatch({ type: 'POWER_OFF' }), 1000)
     } catch (e) {
       setStatus('Save failed: ' + e.message)
       setBusy(false)
     }
   }
 
-  if (saved) {
+  function handleOffNoSave() {
+    clearLiveState()
+    dispatch({ type: 'POWER_OFF' })
+  }
+
+  if (done) {
     return (
-      <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80">
-        <div className="bg-surface border border-ecg-border rounded-2xl shadow-2xl max-w-sm w-full p-8 flex flex-col items-center gap-5">
+      <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/85">
+        <div className="bg-surface border border-ecg-border rounded-2xl shadow-2xl max-w-sm w-full p-8 flex flex-col items-center gap-4">
           <div className="text-5xl text-ecg-green">✓</div>
-          <div className="text-ink font-bold text-center">Session saved successfully.</div>
-          <button
-            onClick={onClose}
-            className="w-full min-h-[48px] rounded-lg font-bold text-sm uppercase tracking-widest border-2 border-ecg-green text-ecg-green hover:bg-ecg-green hover:text-black active:scale-95 transition-all"
-          >
-            Done
-          </button>
+          <div className="text-ink font-bold text-center">Session saved. Powering off…</div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/85">
       <div className="bg-surface border border-ecg-border rounded-2xl shadow-2xl max-w-md w-full">
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-ecg-border">
           <div>
-            <h2 className="text-sm font-bold text-ink tracking-widest uppercase">End Session</h2>
+            <h2 className="text-sm font-bold text-ink tracking-widest uppercase">Power Off</h2>
             <p className="text-[10px] text-ecg-gray font-mono mt-0.5">
-              {state.scenarioName || 'Simulation'} · {fmt(dur)}
+              {state.scenarioName || 'Session'} · {fmt(dur)}
             </p>
           </div>
           <button onClick={onClose} className="text-ecg-gray hover:text-ink text-2xl leading-none px-2">×</button>
@@ -295,12 +361,12 @@ function EndSessionDialog({ state, onClose }) {
 
         <div className="p-5 space-y-4">
 
-          {/* Quick stats */}
+          {/* Session stats */}
           <div className="grid grid-cols-3 gap-2">
             {[
-              { label: 'Duration', value: fmt(dur), color: '' },
-              { label: 'Shocks', value: state.defib.shocksDelivered, color: '' },
-              { label: 'ROSC', value: state.rosc ? 'Yes' : 'No', color: state.rosc ? 'text-ecg-green' : 'text-ecg-red' },
+              { label: 'Duration', value: fmt(dur) },
+              { label: 'Shocks',   value: state.defib.shocksDelivered },
+              { label: 'ROSC',     value: state.rosc ? 'Yes' : 'No', color: state.rosc ? 'text-ecg-green' : 'text-ecg-red' },
             ].map(({ label, value, color }) => (
               <div key={label} className="bg-surface2 border border-ecg-border rounded-lg p-3 text-center">
                 <div className="text-[9px] text-ecg-gray font-mono uppercase tracking-widest mb-1">{label}</div>
@@ -309,49 +375,30 @@ function EndSessionDialog({ state, onClose }) {
             ))}
           </div>
 
-          {/* Who participated */}
+          {/* Participants (read-only — set at power-on) */}
           <div>
-            <label className="text-[10px] text-ecg-green font-mono uppercase tracking-widest">
-              Who participated?
-            </label>
-            <div className="mt-1.5 space-y-1.5">
-              {teamMembers.map((name, i) => (
-                <div key={i} className="flex gap-1.5 items-center">
-                  <input
-                    value={name}
-                    onChange={e => updateMember(i, e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && i === teamMembers.length - 1 && teamMembers.length < 6 && setTeamMembers(prev => [...prev, ''])}
-                    placeholder={i === 0 ? 'Student name…' : `Member ${i + 1}…`}
-                    autoFocus={i === 0}
-                    className="flex-1 bg-surface2 border border-ecg-border rounded-lg px-3 min-h-[44px] text-sm text-ink placeholder-ecg-gray focus:outline-none focus:border-ecg-green"
-                  />
-                  {i > 0 && (
-                    <button
-                      onClick={() => setTeamMembers(prev => prev.filter((_, j) => j !== i))}
-                      className="text-ecg-gray hover:text-ecg-red text-xl leading-none px-2 min-h-[44px]"
-                    >×</button>
-                  )}
-                </div>
-              ))}
-            </div>
-            {teamMembers.length < 6 && (
-              <button
-                onClick={() => setTeamMembers(prev => [...prev, ''])}
-                className="mt-1.5 text-[11px] font-bold text-ecg-green/70 hover:text-ecg-green transition-colors"
-              >
-                + Add Member
-              </button>
+            <div className="text-[10px] text-ecg-green font-mono uppercase tracking-widest mb-1.5">Participants</div>
+            {members.length === 0 ? (
+              <p className="text-[11px] text-ecg-gray italic">No names entered at startup.</p>
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                {members.map((name, i) => (
+                  <span key={i} className="px-2.5 py-1 rounded-full border border-ecg-border bg-surface2 text-[11px] text-ink font-mono">
+                    {name}
+                  </span>
+                ))}
+              </div>
             )}
           </div>
 
           {/* Notes */}
           <div>
-            <label className="text-[10px] text-ecg-green font-mono uppercase tracking-widest">Notes (optional)</label>
+            <label className="text-[10px] text-ecg-green font-mono uppercase tracking-widest">Debrief Notes (optional)</label>
             <textarea
               value={notes}
               onChange={e => setNotes(e.target.value)}
               rows={2}
-              placeholder="Performance, areas to improve, debrief notes…"
+              placeholder="Performance, areas to improve…"
               className="mt-1 w-full bg-surface2 border border-ecg-border rounded-lg px-3 py-2 text-sm text-ink placeholder-ecg-gray focus:outline-none focus:border-ecg-green resize-none"
             />
           </div>
@@ -359,11 +406,18 @@ function EndSessionDialog({ state, onClose }) {
           {status && <p className="text-[11px] text-ecg-amber">{status}</p>}
 
           <button
-            onClick={handleSave}
+            onClick={handleSaveAndOff}
             disabled={busy}
-            className="w-full min-h-[48px] rounded-lg font-bold text-sm uppercase tracking-widest border-2 border-ecg-green text-ecg-green bg-surface2 hover:bg-ecg-green hover:text-black active:scale-95 disabled:opacity-40 transition-all"
+            className="w-full min-h-[52px] rounded-xl font-bold text-sm uppercase tracking-widest border-2 flex items-center justify-center gap-2 transition-all active:scale-95 border-ecg-green text-ecg-green bg-surface2 hover:bg-ecg-green hover:text-black disabled:opacity-40"
           >
-            {busy ? 'Saving…' : 'Save Session'}
+            <span className="text-lg">⏻</span> {busy ? 'Saving…' : 'Save & Power Off'}
+          </button>
+
+          <button
+            onClick={handleOffNoSave}
+            className="w-full text-[11px] text-ecg-gray hover:text-ecg-red transition-colors py-1"
+          >
+            Power off without saving
           </button>
         </div>
       </div>
@@ -379,10 +433,7 @@ function ScenarioDescriptionBanner({ name, description, onDismiss }) {
     <div className="shrink-0 border-b border-ecg-border bg-surface2/80 backdrop-blur-sm">
       <div className="flex items-start gap-2 px-3 py-2">
         <div className="flex-1 min-w-0">
-          <button
-            onClick={() => setExpanded(e => !e)}
-            className="w-full text-left group"
-          >
+          <button onClick={() => setExpanded(e => !e)} className="w-full text-left">
             <div className="flex items-center gap-1.5">
               <span className="text-[9px] font-mono uppercase tracking-widest text-ecg-green shrink-0">Scenario</span>
               {name && <span className="text-[11px] font-bold text-ink truncate">{name}</span>}
@@ -398,7 +449,6 @@ function ScenarioDescriptionBanner({ name, description, onDismiss }) {
         </div>
         <button
           onClick={onDismiss}
-          title="Dismiss scenario info"
           className="shrink-0 text-ecg-gray hover:text-ink text-lg leading-none mt-0.5 px-1 transition-colors"
         >×</button>
       </div>
