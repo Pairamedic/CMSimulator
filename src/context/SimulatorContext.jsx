@@ -47,6 +47,7 @@ export const initialState = {
   instructorOpen: false,
   scenarioName: null,
   pendingScenarioIntro: null,
+  powered: false,
 }
 
 function logEvent(state, entry) {
@@ -270,6 +271,9 @@ function reducer(state, action) {
         codeStartTime: Date.now(),
         eventLog: logEvent(state, { type: 'code', label: 'Session started' }),
       }
+
+    case 'POWER_ON':
+      return { ...state, powered: true }
 
     default:
       return state
