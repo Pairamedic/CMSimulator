@@ -16,13 +16,14 @@ export function loadLiveState(initialState) {
     return {
       ...initialState,
       ...saved,
-      vitals: { ...initialState.vitals, ...saved.vitals },
-      defib:  { ...initialState.defib,  ...saved.defib, charging: false, charged: false },
-      pacer:  { ...initialState.pacer,  ...saved.pacer },
-      cpr:    { ...initialState.cpr,    ...saved.cpr },
+      vitals:      { ...initialState.vitals, ...saved.vitals },
+      defib:       { ...initialState.defib,  ...saved.defib, charging: false, charged: false },
+      pacer:       { ...initialState.pacer,  ...saved.pacer },
+      cpr:         { ...initialState.cpr,    ...saved.cpr },
+      teamMembers: saved.teamMembers ?? [],
       instructorOpen: false,
-      // Auto-power-on when resuming an active session so the instructor
-      // doesn't lose mid-run state behind the power screen on a refresh.
+      // Resume active session transparently — skip the power-on / name-entry
+      // screen so a page refresh doesn't interrupt a running session.
       powered: saved.powered ?? (saved.codeStartTime != null),
     }
   } catch {

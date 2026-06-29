@@ -44,6 +44,7 @@ export const initialState = {
   rhythmHistory: [],
   eventLog: [],
   codeStartTime: null,
+  teamMembers: [],
   instructorOpen: false,
   scenarioName: null,
   scenarioDescription: null,
@@ -289,7 +290,16 @@ function reducer(state, action) {
       }
 
     case 'POWER_ON':
-      return { ...state, powered: true }
+      return {
+        ...state,
+        powered: true,
+        teamMembers: action.teamMembers || [],
+        codeStartTime: Date.now(),
+        eventLog: logEvent(state, { type: 'code', label: 'Session started' }),
+      }
+
+    case 'POWER_OFF':
+      return { ...initialState }
 
     default:
       return state
