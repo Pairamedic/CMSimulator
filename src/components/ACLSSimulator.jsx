@@ -112,6 +112,15 @@ export default function ACLSSimulator() {
         </div>
       </header>
 
+      {/* ── SCENARIO DESCRIPTION BANNER ── */}
+      {state.powered && state.scenarioDescription && (
+        <ScenarioDescriptionBanner
+          name={state.scenarioName}
+          description={state.scenarioDescription}
+          onDismiss={() => dispatch({ type: 'DISMISS_SCENARIO_DESCRIPTION' })}
+        />
+      )}
+
       {/* ── BODY: power-off screen or running simulator ── */}
       {!state.powered ? (
         <PowerOnScreen />
@@ -349,6 +358,41 @@ function EndSessionDialog({ state, onClose }) {
             {busy ? 'Saving…' : 'Save Session'}
           </button>
         </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Scenario description banner (student-facing) ─────────────────────────────
+
+function ScenarioDescriptionBanner({ name, description, onDismiss }) {
+  const [expanded, setExpanded] = useState(false)
+  return (
+    <div className="shrink-0 border-b border-ecg-border bg-surface2/80 backdrop-blur-sm">
+      <div className="flex items-start gap-2 px-3 py-2">
+        <div className="flex-1 min-w-0">
+          <button
+            onClick={() => setExpanded(e => !e)}
+            className="w-full text-left group"
+          >
+            <div className="flex items-center gap-1.5">
+              <span className="text-[9px] font-mono uppercase tracking-widest text-ecg-green shrink-0">Scenario</span>
+              {name && <span className="text-[11px] font-bold text-ink truncate">{name}</span>}
+              <span className="text-[9px] text-ecg-gray font-mono ml-auto shrink-0">{expanded ? '▲' : '▼'}</span>
+            </div>
+            {!expanded && (
+              <p className="text-[11px] text-ecg-gray leading-snug mt-0.5 line-clamp-1">{description}</p>
+            )}
+          </button>
+          {expanded && (
+            <p className="text-[12px] text-ink leading-relaxed mt-1 pr-2">{description}</p>
+          )}
+        </div>
+        <button
+          onClick={onDismiss}
+          title="Dismiss scenario info"
+          className="shrink-0 text-ecg-gray hover:text-ink text-lg leading-none mt-0.5 px-1 transition-colors"
+        >×</button>
       </div>
     </div>
   )
