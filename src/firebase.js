@@ -1,7 +1,7 @@
 import { initializeApp, getApps } from 'firebase/app'
 import {
   getFirestore, collection, addDoc, getDocs,
-  deleteDoc, doc, query, orderBy, where,
+  deleteDoc, doc, query, orderBy,
 } from 'firebase/firestore'
 import {
   getAuth,
@@ -42,12 +42,6 @@ function auth() {
   return _auth
 }
 
-function uid() {
-  const u = auth().currentUser
-  if (!u) throw new Error('Not signed in')
-  return u.uid
-}
-
 // ── Auth ──────────────────────────────────────────────────
 export function subscribeAuth(callback) {
   if (!firebaseReady) { callback(null); return () => {} }
@@ -80,11 +74,7 @@ export async function fbSaveScenario(payload) {
 
 export async function fbLoadScenarios() {
   const snap = await getDocs(
-    query(
-      collection(db(), 'acls_scenarios'),
-      where('uid', '==', uid()),
-      orderBy('savedAt', 'desc'),
-    )
+    query(collection(db(), 'acls_scenarios'), orderBy('savedAt', 'desc'))
   )
   return snap.docs.map(d => ({ id: d.id, ...d.data() }))
 }
@@ -105,11 +95,7 @@ export async function fbSaveSession(payload) {
 
 export async function fbLoadSessions() {
   const snap = await getDocs(
-    query(
-      collection(db(), 'acls_sessions'),
-      where('uid', '==', uid()),
-      orderBy('savedAt', 'desc'),
-    )
+    query(collection(db(), 'acls_sessions'), orderBy('savedAt', 'desc'))
   )
   return snap.docs.map(d => ({ id: d.id, ...d.data() }))
 }
