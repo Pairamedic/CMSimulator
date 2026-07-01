@@ -113,8 +113,11 @@ export default function GradebookModal({ onClose }) {
           </button>
           <button
             onClick={onClose}
-            className="text-ecg-gray hover:text-ink text-2xl leading-none px-2"
-          >×</button>
+            title="Return to the cardiac monitor simulator"
+            className="flex items-center gap-1.5 px-3 min-h-[36px] text-[11px] font-bold font-mono uppercase tracking-widest rounded-lg border border-ecg-border text-ecg-gray bg-surface2 hover:text-ink hover:border-ecg-green active:scale-95 transition-all whitespace-nowrap"
+          >
+            <span className="text-ecg-green">←</span> Monitor
+          </button>
         </div>
       </div>
 
