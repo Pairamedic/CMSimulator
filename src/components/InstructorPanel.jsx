@@ -111,7 +111,7 @@ const RHYTHM_GROUPS = [
   { label: 'Non-Shockable Arrest',    cat: 'noshock' },
 ]
 
-export default function InstructorPanel({ onEndSession }) {
+export default function InstructorPanel({ onEndSession, onOpenGradebook }) {
   const { state, dispatch } = useSimulator()
   const { scenarios: SCENARIOS, scenarioGroups: SCENARIO_GROUPS, reversibleCauses: REVERSIBLE_CAUSES } = useContent()
   const [cloudScenarios, setCloudScenarios] = useState([])
@@ -191,6 +191,14 @@ export default function InstructorPanel({ onEndSession }) {
           >
             {state.labelHidden ? 'Reveal Rhythm' : 'Hide Rhythm'}
           </button>
+          {onOpenGradebook && (
+            <button
+              onClick={onOpenGradebook}
+              className="flex-1 min-h-[40px] rounded-lg border font-bold text-xs uppercase tracking-widest transition-colors border-ecg-border text-ecg-gray bg-surface2 hover:text-ink hover:border-ecg-green"
+            >
+              Gradebook
+            </button>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto p-3 space-y-2">

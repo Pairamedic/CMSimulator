@@ -78,7 +78,6 @@ export default function ACLSSimulator() {
           )}
           <HeaderButton onClick={() => setShowAlgos(true)}>Algorithms</HeaderButton>
           <HeaderButton onClick={() => setShowSessions(true)}>Sessions</HeaderButton>
-          <HeaderButton onClick={() => setShowGradebook(true)}>Gradebook</HeaderButton>
         </div>
 
         <div className="flex items-center gap-2 min-w-0 order-1 sm:order-2">
@@ -160,7 +159,11 @@ export default function ACLSSimulator() {
       )}
 
       {/* ── MODALS & OVERLAYS ── */}
-      {state.instructorOpen && <InstructorPanel />}
+      {state.instructorOpen && (
+        <InstructorPanel
+          onOpenGradebook={() => { dispatch({ type: 'TOGGLE_INSTRUCTOR' }); setShowGradebook(true) }}
+        />
+      )}
       {showPrint     && <PrintSummary    onClose={() => setShowPrint(false)} />}
       {showAlgos     && <AlgorithmModal  onClose={() => setShowAlgos(false)} />}
       {showSessions  && <SessionsModal   onClose={() => setShowSessions(false)} />}
