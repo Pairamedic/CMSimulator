@@ -9,9 +9,10 @@ function VitalTile({ label, children, color = 'text-ecg-green', hidden, classNam
   return (
     <div className={`flex flex-col justify-between p-2 border-r border-ecg-border last:border-r-0 min-w-0 ${className}`}>
       <span className="text-[9px] font-mono uppercase tracking-widest text-ecg-gray leading-none">{label}</span>
-      <div className={`font-bold font-mono leading-none ${color}`}>
+      {/* Fixed-height value row so every tile's number sits on the same baseline */}
+      <div className={`flex items-baseline h-9 font-bold font-mono leading-none ${color}`}>
         {hidden ? (
-          <span className="text-ecg-gray text-2xl">--</span>
+          <span className="text-ecg-gray text-4xl">--</span>
         ) : children}
       </div>
     </div>
@@ -33,47 +34,36 @@ export default function VitalsDisplay() {
 
       {/* HR */}
       <VitalTile label="HR" color={hrColor} hidden={h} className="flex-1">
-        <div className="flex items-baseline gap-1">
-          <span className="text-4xl">{displayHR}</span>
-          <span className="text-[11px] text-ecg-gray font-mono">bpm</span>
-        </div>
+        <span className="text-4xl">{displayHR}</span>
+        <span className="text-[11px] text-ecg-gray font-mono ml-1">bpm</span>
       </VitalTile>
 
       {/* NIBP */}
       <VitalTile label="NIBP" color={bpColor} hidden={h} className="flex-[1.4]">
-        <div className="flex items-baseline gap-0.5">
-          <span className="text-3xl">{v.sbp}</span>
-          <span className="text-xl text-ecg-gray">/</span>
-          <span className="text-2xl">{v.dbp}</span>
-          <span className="text-[10px] text-ecg-gray font-mono ml-1">
-            ({map(v.sbp, v.dbp)})
-          </span>
-        </div>
-        <span className="text-[9px] text-ecg-gray font-mono">mmHg</span>
+        <span className="text-4xl">{v.sbp}</span>
+        <span className="text-2xl text-ecg-gray mx-0.5">/</span>
+        <span className="text-3xl">{v.dbp}</span>
+        <span className="text-[10px] text-ecg-gray font-mono ml-1">
+          ({map(v.sbp, v.dbp)}) mmHg
+        </span>
       </VitalTile>
 
       {/* SpO2 */}
       <VitalTile label="SpO₂" color={spo2Color} hidden={h} className="flex-1">
-        <div className="flex items-baseline gap-0.5">
-          <span className="text-4xl">{v.spo2}</span>
-          <span className="text-base">%</span>
-        </div>
+        <span className="text-4xl">{v.spo2}</span>
+        <span className="text-base ml-0.5">%</span>
       </VitalTile>
 
       {/* EtCO2 */}
       <VitalTile label="EtCO₂" color="text-ecg-amber" hidden={h} className="flex-1">
-        <div className="flex items-baseline gap-1">
-          <span className="text-4xl">{v.etco2}</span>
-          <span className="text-[11px] text-ecg-gray font-mono">mmHg</span>
-        </div>
+        <span className="text-4xl">{v.etco2}</span>
+        <span className="text-[11px] text-ecg-gray font-mono ml-1">mmHg</span>
       </VitalTile>
 
       {/* Temp */}
       <VitalTile label="Temp" color="text-ecg-gray" hidden={h} className="flex-1">
-        <div className="flex items-baseline gap-0.5">
-          <span className="text-2xl">{v.temp.toFixed(1)}</span>
-          <span className="text-base">°F</span>
-        </div>
+        <span className="text-4xl">{v.temp.toFixed(1)}</span>
+        <span className="text-base ml-0.5">°F</span>
       </VitalTile>
 
     </div>
