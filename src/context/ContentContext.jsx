@@ -1,8 +1,10 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import { fbLoadContent } from '../firebase'
+import { loadContent } from '../utils/contentStore'
 
 // Serves the medical content catalog (scenarios, algorithms, reversible causes)
-// fetched from Firestore at runtime. The data no longer ships in the bundle, so
+// from Firestore at runtime, or from the locally-bundled catalog when running
+// offline (see contentStore). The provider gates the app until the catalog has
+// loaded — by the time any
 // this provider gates the app until the catalog has loaded — by the time any
 // consumer renders, the content is guaranteed present and can be read
 // synchronously, exactly like the old static imports.
@@ -24,7 +26,7 @@ export function ContentProvider({ children }) {
 
   useEffect(() => {
     let alive = true
-    fbLoadContent()
+    loadContent()
       .then(data => { if (alive) setContent(data) })
       .catch(e => { if (alive) setError(e) })
     return () => { alive = false }

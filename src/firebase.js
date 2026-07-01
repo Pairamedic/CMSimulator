@@ -23,7 +23,21 @@ const cfg = {
   measurementId:     import.meta.env.VITE_FIREBASE_MEASUREMENT_ID     || '',
 }
 
-export const firebaseReady = !!(cfg.apiKey && cfg.projectId)
+// Force fully-offline operation regardless of any Firebase config that may be
+// present in the bundle. Set VITE_OFFLINE=1 (see .env.offline) to build a
+// local-only version that never touches Google's servers — the resilient
+// fallback for "if Firebase ever goes down." When it's off, the app behaves
+// exactly as before and uses the cloud whenever a config is present.
+const forceOffline =
+  import.meta.env.VITE_OFFLINE === '1' || import.meta.env.VITE_OFFLINE === 'true'
+
+// Offline when explicitly forced, or when no Firebase config was provided.
+export const offlineMode = forceOffline || !(cfg.apiKey && cfg.projectId)
+export const firebaseReady = !offlineMode
+
+// Synthetic single-user identity used in offline mode so the app opens straight
+// into the simulator with no login wall. `isLocal` lets the UI hide sign-out.
+const LOCAL_USER = { uid: 'local', displayName: 'Local', email: 'local', isLocal: true }
 
 // reCAPTCHA v3 site key for App Check. When set, only requests originating
 // from the real, attested app are accepted by Firebase — a clone that copies
@@ -67,7 +81,8 @@ function requireUid() {
 
 // ── Auth ──────────────────────────────────────────────────
 export function subscribeAuth(callback) {
-  if (!firebaseReady) { callback(null); return () => {} }
+  // Offline: hand back the local user so the app skips the login screen.
+  if (!firebaseReady) { callback(LOCAL_USER); return () => {} }
   return onAuthStateChanged(auth(), callback)
 }
 
@@ -82,6 +97,8 @@ export async function signUp(email, password, displayName) {
 }
 
 export async function signOut() {
+  // No account to sign out of when running offline.
+  if (!firebaseReady) return
   return fbSignOut(auth())
 }
 
