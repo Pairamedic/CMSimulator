@@ -9,9 +9,11 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     VitePWA({
-      // 'prompt' surfaces a "new version available" toast instead of silently
-      // swapping the app out from under an in-progress code.
-      registerType: 'prompt',
+      // 'autoUpdate' + skipWaiting/clientsClaim: a new deploy's service worker
+      // activates on its own and takes control immediately, so users are never
+      // stranded on a stale cached shell (which shows as a white screen when the
+      // old shell references JS chunks the new deploy has removed).
+      registerType: 'autoUpdate',
       includeAssets: ['icon.svg', 'apple-touch-icon.png', 'pwa-192.png', 'pwa-512.png'],
       manifest: {
         name: 'CM Simulator',
@@ -30,6 +32,11 @@ export default defineConfig(({ mode }) => ({
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         cleanupOutdatedCaches: true,
+        // Take over from the previous service worker right away rather than
+        // waiting for every old tab to close — this is what lets a broken/stale
+        // client self-heal on the next load instead of staying white.
+        skipWaiting: true,
+        clientsClaim: true,
       },
     }),
   ],
