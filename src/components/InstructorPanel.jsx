@@ -440,7 +440,7 @@ function ScenarioBuilder({ dispatch, close }) {
         onChange={e => setText(e.target.value)}
         rows={7}
         placeholder={'Name: ...\nDescription: ...\nHR: 72\nBP: 120/80\nSpO2: 98\nEtCO2: 35\nRhythm: NSR'}
-        className="w-full bg-surface2 border border-ecg-border rounded px-2.5 py-2 text-[11px] font-mono text-ink placeholder-ecg-gray/50 focus:outline-none focus:border-ecg-green resize-none"
+        className="w-full bg-surface2 border border-ecg-border rounded px-2.5 py-2 text-[11px] font-mono text-ecg-amber placeholder-ecg-gray/50 focus:outline-none focus:border-ecg-green resize-none"
         spellCheck={false}
       />
 
