@@ -2,8 +2,10 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
-export default defineConfig({
-  base: '/CMSimulator/',
+// `--mode offline` builds the local-only version: relative asset paths so it
+// runs from any folder / local server, instead of the GitHub Pages sub-path.
+export default defineConfig(({ mode }) => ({
+  base: mode === 'offline' ? './' : '/CMSimulator/',
   plugins: [
     react(),
     VitePWA({
@@ -31,4 +33,4 @@ export default defineConfig({
       },
     }),
   ],
-})
+}))

@@ -116,7 +116,7 @@ export default function ACLSSimulator() {
             ⏻
           </button>
 
-          {user && (
+          {user && !user.isLocal && (
             <button
               onClick={() => signOut()}
               title={`Signed in as ${user.email}\nTap to sign out`}

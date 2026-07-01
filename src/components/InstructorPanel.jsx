@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { useSimulator } from '../context/SimulatorContext'
 import { RHYTHM_LIST } from '../data/rhythms'
 import { useContent } from '../context/ContentContext'
-import { firebaseReady, fbSaveScenario, fbLoadScenarios, fbDeleteScenario } from '../firebase'
+import { firebaseReady } from '../firebase'
+import { saveScenario, loadScenarios, deleteScenario } from '../utils/scenarioStore'
 
 // ── Scenario parser ───────────────────────────────────────────────────────────
 const RHYTHM_ALIASES = {
@@ -122,15 +123,17 @@ export default function InstructorPanel({ onEndSession }) {
 
   async function loadCloud() {
     try {
-      const data = await fbLoadScenarios()
+      const data = await loadScenarios()
       setCloudScenarios(data)
     } catch (e) {
       setFbStatus('Load error: ' + e.message)
     }
   }
 
+  // Load saved scenarios on open — from Firestore when configured, otherwise
+  // from local storage (offline).
   useEffect(() => {
-    if (firebaseReady) loadCloud()
+    loadCloud()
   }, [])
 
   async function handleSave() {
@@ -138,7 +141,7 @@ export default function InstructorPanel({ onEndSession }) {
     setFbLoading(true)
     setFbStatus('')
     try {
-      await fbSaveScenario({
+      await saveScenario({
         name: saveName.trim(),
         rhythm: state.currentRhythm,
         vitals: { ...state.vitals },
@@ -157,7 +160,7 @@ export default function InstructorPanel({ onEndSession }) {
 
   async function handleDelete(id) {
     try {
-      await fbDeleteScenario(id)
+      await deleteScenario(id)
       await loadCloud()
     } catch (e) {
       setFbStatus('Delete failed: ' + e.message)
@@ -219,9 +222,9 @@ export default function InstructorPanel({ onEndSession }) {
             })}
           </CollapsibleSection>
 
-          {/* CLOUD SCENARIOS */}
-          {firebaseReady && (
-            <CollapsibleSection title="Cloud Scenarios">
+          {/* SAVED SCENARIOS — Firestore when online, this device's storage offline */}
+          {(
+            <CollapsibleSection title={firebaseReady ? 'Cloud Scenarios' : 'Saved Scenarios'}>
               <div className="flex gap-1.5 mb-2">
                 <input
                   type="text"
