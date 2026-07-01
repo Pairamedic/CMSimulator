@@ -82,6 +82,28 @@ function reducer(state, action) {
     case 'SET_VITALS':
       return { ...state, vitals: { ...state.vitals, ...action.vitals } }
 
+    // Set HR directly (e.g. typed on the monitor) and, when the current rhythm
+    // is a rate-driven sinus rhythm, auto-select the matching morphology so the
+    // EKG reflects the new rate: <60 brady, >160 SVT, >100 sinus tach, else NSR.
+    // The typed HR is preserved (unlike SET_RHYTHM, which snaps to native rate).
+    case 'SET_HR': {
+      const hr = Math.max(0, Math.min(300, Math.round(Number(action.hr) || 0)))
+      const RATE_DRIVEN = ['NSR', 'SINUS_BRADY', 'SINUS_TACH', 'SVT']
+      let { currentRhythm, rhythmHistory, eventLog } = state
+      if (RATE_DRIVEN.includes(currentRhythm)) {
+        const target = hr < 60 ? 'SINUS_BRADY'
+          : hr > 160 ? 'SVT'
+          : hr > 100 ? 'SINUS_TACH'
+          : 'NSR'
+        if (target !== currentRhythm) {
+          currentRhythm = target
+          rhythmHistory = [...state.rhythmHistory, { rhythm: target, time: Date.now() }]
+          eventLog = logEvent(state, { type: 'rhythm', label: 'Rhythm', detail: target })
+        }
+      }
+      return { ...state, currentRhythm, rhythmHistory, eventLog, vitals: { ...state.vitals, hr } }
+    }
+
     case 'TOGGLE_VITALS_HIDDEN':
       return { ...state, vitalsHidden: !state.vitalsHidden }
 
