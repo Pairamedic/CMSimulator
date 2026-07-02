@@ -206,7 +206,9 @@ export default function InstructorPanel({ onEndSession, onOpenGradebook }) {
           {/* QUICK SCENARIOS — grouped by AHA category */}
           <CollapsibleSection title="Quick Scenarios">
             {SCENARIO_GROUPS.map(group => {
-              const groupScenarios = SCENARIOS.filter(sc => sc.group === group.key)
+              const groupScenarios = SCENARIOS.filter(
+                sc => sc.group === group.key && (sc.mode || 'ACLS') === state.mode
+              )
               if (!groupScenarios.length) return null
               return (
                 <div key={group.key} className="mb-3 last:mb-0">

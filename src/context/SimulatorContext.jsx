@@ -319,16 +319,24 @@ function reducer(state, action) {
         scenarioDescription: null,
       }
 
-    case 'LOAD_SCENARIO':
+    case 'LOAD_SCENARIO': {
+      // PALS scenarios carry a Broselow zone so the child's size drives
+      // weight-based vitals thresholds, dosing, and defib energy. Apply it (and
+      // the zone's default defib energy) on load; adult scenarios leave the zone
+      // untouched.
+      const zone = action.scenario.broselowZone || null
       return {
         ...state,
+        broselowZone: zone ?? state.broselowZone,
         currentRhythm: action.scenario.rhythm,
         vitals: { ...state.vitals, ...action.scenario.vitals },
         vitalsHidden: action.scenario.vitalsHidden ?? false,
         labelHidden: true,
         scenarioName: action.scenario.name,
         scenarioDescription: action.scenario.description || null,
-        defib: { ...initialState.defib },
+        defib: zone
+          ? { ...initialState.defib, energy: getZone(zone).defibJoules.initial }
+          : { ...initialState.defib },
         pacer: { ...initialState.pacer, captureThreshold: action.scenario.captureThreshold ?? 60 },
         cpr: { ...initialState.cpr },
         reversibleCauses: action.scenario.reversibleCauses ?? [],
@@ -340,6 +348,7 @@ function reducer(state, action) {
         eventLog: [{ time: Date.now(), type: 'scenario', label: 'Scenario loaded', detail: action.scenario.name }],
         pendingScenarioIntro: { name: action.scenario.name, description: action.scenario.description || '' },
       }
+    }
 
     case 'CONFIRM_SCENARIO_INTRO':
       return {
