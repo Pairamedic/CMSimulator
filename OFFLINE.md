@@ -103,6 +103,22 @@ npm run desktop
 The desktop wrapper lives in `electron/main.js` and simply loads the existing
 `dist\` offline build in a native window — it does not change the web app.
 
+### Build the `.exe` automatically (no Windows PC needed)
+
+`.github/workflows/desktop.yml` builds the installer on a GitHub-hosted Windows
+runner, so you can get an `.exe` without owning a Windows machine:
+
+- **Manual:** open the repo's **Actions** tab → *Build Desktop App (.exe)* →
+  **Run workflow**. When it finishes, download the `cm-simulator-windows`
+  artifact (contains the `.exe`).
+- **Tagged release:** push a version tag and the workflow also publishes the
+  `.exe` as a downloadable GitHub Release:
+
+  ```
+  git tag v1.0.0
+  git push origin v1.0.0
+  ```
+
 ## How the switch works (for reference)
 
 Offline mode is controlled by `VITE_OFFLINE=1` in `.env.offline`, which the
