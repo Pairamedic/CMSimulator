@@ -28,15 +28,18 @@ export const LIMB_MNEMONIC =
   'White on the right · Snow over grass (RA white / RL green) · Smoke over fire (LA black / LL red)'
 
 // Precordial (chest) leads for a full 12-lead. Each anatomical slot expects a
-// specific V lead; the learner must know where V1–V6 go (hint available). Slots
-// are positioned over the chest of the same torso diagram used for limb leads.
+// specific V lead; the learner must know where V1–V6 go (hint available).
+// Positioned over the larger, dedicated chest diagram in LeadsModal (see
+// ChestTorso) — spaced out enough that adjacent 32px electrode targets don't
+// visually overlap, while still fanning out left-to-right the way V1→V6
+// actually progress across the chest.
 export const PRECORDIAL_SLOTS = [
-  { key: 'P1', correct: 'V1', site: '4th ICS, right sternal border', pos: { top: '34%', left: '44%' } },
-  { key: 'P2', correct: 'V2', site: '4th ICS, left sternal border',  pos: { top: '34%', left: '56%' } },
-  { key: 'P3', correct: 'V3', site: 'midway between V2 and V4',       pos: { top: '41%', left: '60%' } },
-  { key: 'P4', correct: 'V4', site: '5th ICS, midclavicular line',    pos: { top: '48%', left: '64%' } },
-  { key: 'P5', correct: 'V5', site: 'anterior axillary line (V4 level)', pos: { top: '48%', left: '73%' } },
-  { key: 'P6', correct: 'V6', site: 'midaxillary line (V4 level)',    pos: { top: '48%', left: '82%' } },
+  { key: 'P1', correct: 'V1', site: '4th ICS, right sternal border', pos: { top: '30%', left: '40%' } },
+  { key: 'P2', correct: 'V2', site: '4th ICS, left sternal border',  pos: { top: '30%', left: '58%' } },
+  { key: 'P3', correct: 'V3', site: 'midway between V2 and V4',       pos: { top: '42%', left: '66%' } },
+  { key: 'P4', correct: 'V4', site: '5th ICS, midclavicular line',    pos: { top: '55%', left: '73%' } },
+  { key: 'P5', correct: 'V5', site: 'anterior axillary line (V4 level)', pos: { top: '55%', left: '83%' } },
+  { key: 'P6', correct: 'V6', site: 'midaxillary line (V4 level)',    pos: { top: '55%', left: '92%' } },
 ]
 
 // The six chest electrodes the learner drops onto the slots above.
