@@ -3,7 +3,7 @@ import { RHYTHMS } from '../data/rhythms'
 import { loadLiveState, saveLiveState } from '../utils/livePersist'
 import { getPediatricVitals } from '../data/pediatricVitals'
 import { DEFAULT_ZONE, getZone } from '../data/broselowTape'
-import { EMPTY_LEADS, limbLeadsConnected } from '../data/leads'
+import { EMPTY_LEADS, limbLeadsConnected, precordialConnected } from '../data/leads'
 
 const Ctx = createContext(null)
 
@@ -212,13 +212,16 @@ function reducer(state, action) {
       const { position, color } = action
       const current = state.leads[position]
       const leads = { ...state.leads, [position]: current === color ? null : color }
-      const justConnected = limbLeadsConnected(leads) && !limbLeadsConnected(state.leads)
+      const limbJust = limbLeadsConnected(leads) && !limbLeadsConnected(state.leads)
+      const preJust = precordialConnected(leads) && !precordialConnected(state.leads)
       return {
         ...state,
         leads,
-        eventLog: justConnected
+        eventLog: limbJust
           ? logEvent(state, { type: 'leads', label: 'Limb leads', detail: 'connected' })
-          : state.eventLog,
+          : preJust
+            ? logEvent(state, { type: 'leads', label: 'Chest leads (V1–V6)', detail: 'connected' })
+            : state.eventLog,
       }
     }
 

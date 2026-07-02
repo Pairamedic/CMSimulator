@@ -7,7 +7,7 @@ import TwelveLeadModal from './TwelveLeadModal'
 import BroselowTapeModal from './BroselowTapeModal'
 import { RHYTHMS } from '../data/rhythms'
 import { getZone, DEFAULT_ZONE } from '../data/broselowTape'
-import { limbLeadsConnected } from '../data/leads'
+import { limbLeadsConnected, twelveLeadConnected } from '../data/leads'
 
 export default function MonitorScreen() {
   const { state } = useSimulator()
@@ -22,6 +22,7 @@ export default function MonitorScreen() {
   // the limb leads specifically.
   const limbOn = limbLeadsConnected(state.leads)
   const hasTrace = limbOn || state.defib.padsConnected
+  const twelveReady = twelveLeadConnected(state.leads) // limb + all six chest leads
 
   const categoryColors = {
     normal:  'text-ecg-green',
@@ -63,11 +64,11 @@ export default function MonitorScreen() {
             </button>
           )}
           <button
-            onClick={() => limbOn && setShow12Lead(true)}
-            disabled={!limbOn}
-            title={limbOn ? '' : 'Connect limb leads first'}
+            onClick={() => twelveReady && setShow12Lead(true)}
+            disabled={!twelveReady}
+            title={twelveReady ? '' : limbOn ? 'Place chest leads V1–V6' : 'Connect limb leads first'}
             className={`text-[10px] font-bold font-mono px-2.5 py-1 rounded border uppercase tracking-widest transition-colors ${
-              limbOn
+              twelveReady
                 ? 'border-ecg-border text-ecg-gray hover:text-ecg-green hover:border-ecg-green'
                 : 'border-ecg-border/50 text-ecg-border cursor-not-allowed'
             }`}
