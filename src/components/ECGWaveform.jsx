@@ -27,10 +27,12 @@ export default function ECGWaveform() {
       const h = el.clientHeight
       if (!w || !h) return
       const dpr = window.devicePixelRatio || 1
+      // Backing store (pixel buffer) only, for HiDPI sharpness — the canvas's
+      // on-screen box is sized purely by CSS (w-full h-full below) and never
+      // touches this measurement, so a stale/early read here can blur one
+      // frame at most instead of leaving the trace stuck at a smaller width.
       canvas.width  = Math.round(w * dpr)
       canvas.height = Math.round(h * dpr)
-      canvas.style.width  = w + 'px'
-      canvas.style.height = h + 'px'
       setDims(prev =>
         (prev.width === w && prev.height === h && prev.dpr === dpr) ? prev : { width: w, height: h, dpr }
       )
@@ -62,7 +64,7 @@ export default function ECGWaveform() {
       className="flex-1 min-h-0 relative overflow-hidden"
       style={{ background: '#050810' }}
     >
-      <canvas ref={canvasRef} className="absolute inset-0" />
+      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
       {/* SYNC label as a React overlay — never drawn on the scrolling canvas */}
       {state.defib.syncMode && (
         <div className="absolute top-2 left-2 text-[11px] font-bold font-mono text-white bg-black/50 px-1.5 py-0.5 rounded pointer-events-none">

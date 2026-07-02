@@ -19,10 +19,11 @@ export default function EtCO2Waveform() {
       const w = el.offsetWidth
       if (!w) return
       const dpr = window.devicePixelRatio || 1
+      // Backing store only — the canvas's on-screen box is sized by CSS
+      // (w-full h-full below), so a stale/early measurement here can only
+      // blur a frame, never leave the trace stuck at the wrong width.
       canvas.width  = Math.round(w * dpr)
       canvas.height = Math.round(CSS_HEIGHT * dpr)
-      canvas.style.width  = w + 'px'
-      canvas.style.height = CSS_HEIGHT + 'px'
       setCanvasReady(v => !v)
     }
 
@@ -49,7 +50,7 @@ export default function EtCO2Waveform() {
         </span>
       </div>
       <div ref={containerRef} className="flex-1 relative overflow-hidden" style={{ background: '#0a0c0f' }}>
-        <canvas ref={canvasRef} className="absolute inset-0" />
+        <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
       </div>
     </div>
   )
